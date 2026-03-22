@@ -27,12 +27,9 @@ if(typeof window==='undefined'){
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#1a6b5a" media="(prefers-color-scheme: light)" id="themeColorLight">
-<meta name="theme-color" content="#4db89e" media="(prefers-color-scheme: dark)" id="themeColorDark">
-<meta name="theme-color" content="#1a6b5a" id="themeColorMeta">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a6b5a" id="themeColor">
 <meta name="apple-mobile-web-app-status-bar-style" content="default" id="appleStatusBar">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect width='48' height='48' rx='12' fill='%231a6b5a'/><rect x='12' y='8' width='24' height='4' rx='2' fill='white' opacity='.6'/><rect x='10' y='16' width='28' height='22' rx='4' fill='white'/><rect x='14' y='20' width='4' height='4' rx='1' fill='%231a6b5a'/><rect x='14' y='26' width='4' height='4' rx='1' fill='%231a6b5a'/><rect x='20' y='20' width='14' height='2' rx='1' fill='%231a6b5a' opacity='.4'/><rect x='20' y='24' width='10' height='2' rx='1' fill='%231a6b5a' opacity='.4'/><rect x='20' y='28' width='12' height='2' rx='1' fill='%231a6b5a' opacity='.4'/></svg>">
 <link rel="manifest" id="pwaManifest">
@@ -559,34 +556,43 @@ const SC={
 // =========================================
 function save(){
   try{
+    // Ensure weeklyOffHistory is always in settings
+    if(!S.weeklyOffHistory) S.weeklyOffHistory = {};
     const payload={
-      db:D,
-      settings:S,
-      meta:{savedAt:new Date().toISOString(),version:'2.0',developer:'Aashish Giri'}
+      db: D,
+      settings: S,
+      meta: {savedAt:new Date().toISOString(), version:'2.0', developer:'Aashish Giri'}
     };
-    localStorage.setItem('sa_app',JSON.stringify(payload));
-    // legacy keys bhi update karo compatibility ke liye
-    localStorage.setItem('sa_d',JSON.stringify(D));
-    localStorage.setItem('sa_s',JSON.stringify(S));
-  }catch(e){console.warn('Save failed:',e);}
+    const str = JSON.stringify(payload);
+    localStorage.setItem('sa_app', str);
+    localStorage.setItem('sa_d', JSON.stringify(D));
+    localStorage.setItem('sa_s', JSON.stringify(S));
+  }catch(e){ console.warn('Save failed:',e); }
 }
 
 function load(){
   try{
-    // pehle nayi key try karo
-    const raw=localStorage.getItem('sa_app');
+    const raw = localStorage.getItem('sa_app');
     if(raw){
-      const p=JSON.parse(raw);
-      if(p.db)D=p.db;
-      if(p.settings)S=Object.assign(S,p.settings);
+      const p = JSON.parse(raw);
+      if(p.db) D = p.db;
+      if(p.settings){
+        S = Object.assign(
+          {dark:false, targetPct:75, showOT:false, weeklyOff:0, weeklyOffHistory:{}},
+          p.settings
+        );
+      }
+      // Ensure attendance map exists for all subjects
+      if(D.subjects) D.subjects.forEach(s=>{ if(!D.attendance[s.id]) D.attendance[s.id]=[]; });
       return;
     }
-    // purani keys fallback
-    const d=localStorage.getItem('sa_d');
-    if(d)D=JSON.parse(d);
-    const s=localStorage.getItem('sa_s');
-    if(s)S=Object.assign(S,JSON.parse(s));
-  }catch(e){console.warn('Load failed:',e);}
+    // Legacy fallback
+    const d = localStorage.getItem('sa_d');
+    if(d) D = JSON.parse(d);
+    const s = localStorage.getItem('sa_s');
+    if(s) S = Object.assign(S, JSON.parse(s));
+    if(D.subjects) D.subjects.forEach(sub=>{ if(!D.attendance[sub.id]) D.attendance[sub.id]=[]; });
+  }catch(e){ console.warn('Load failed:',e); }
 }
 
 // =========================================
@@ -603,23 +609,11 @@ function applyTheme(){
   document.documentElement.setAttribute('data-theme',S.dark?'dark':'');
   document.getElementById('darkTog').classList.toggle('on',S.dark);
   document.getElementById('darkVal').textContent=S.dark?'Dark':'Light';
-  // Android status bar = topbar header color (primary)
-  // Status bar = exact header primary color
-  const lightColor='#1a6b5a'; // light mode header
-  const darkColor='#4db89e';  // dark mode header
-  const cur=S.dark?darkColor:lightColor;
-  ['themeColorMeta','themeColorLight','themeColorDark'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.setAttribute('content', id==='themeColorDark' ? darkColor : id==='themeColorLight' ? lightColor : cur);
-  });
-  // Force browser to re-read theme-color by toggling media attribute
-  const ml=document.getElementById('themeColorLight');
-  const md=document.getElementById('themeColorDark');
-  if(ml) ml.setAttribute('media', S.dark ? 'not all' : '(prefers-color-scheme: light)');
-  if(md) md.setAttribute('media', S.dark ? '(prefers-color-scheme: dark)' : 'not all');
-  const apMeta=document.getElementById('appleStatusBar');
-  if(apMeta)apMeta.setAttribute('content',S.dark?'black':'black-translucent');
-}
+  // Status bar = exact topbar color
+  const tc = document.getElementById('themeColor');
+  if(tc) tc.setAttribute('content', S.dark ? '#4db89e' : '#1a6b5a');
+  const apMeta = document.getElementById('appleStatusBar');
+  if(apMeta) apMeta.setAttribute('content', S.dark ? 'black' : 'black-translucent');
 function applyS(){
   document.getElementById('targetVal').textContent=S.targetPct+'%';
   document.getElementById('otTog').classList.toggle('on',S.showOT);
