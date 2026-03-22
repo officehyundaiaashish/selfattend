@@ -460,13 +460,10 @@ select:-webkit-autofill {
     <div class="sheet-handle"></div>
     <div class="sheet-title" id="addSheetTitle">Add New Subject</div>
     <div class="form-field">
-      <label>Subject Name</label>
-      <input type="text" id="subName" placeholder="e.g. Mathematics, Physics..." maxlength="40" autocomplete="new-password" autocorrect="off" autocapitalize="words" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true">
+      <label>Name</label>
+      <input type="search" id="subName" placeholder="Enter name..." maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" readonly onfocus="this.removeAttribute('readonly');this.type='text'">
     </div>
-    <div class="form-field">
-      <label>Short Code</label>
-      <input type="text" id="subCode" placeholder="e.g. MATH, PHY..." maxlength="6" style="text-transform:uppercase" autocomplete="new-password" autocorrect="off" autocapitalize="characters" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true">
-    </div>
+
     <div style="padding:0 16px 16px">
       <button class="btn-primary" onclick="event.stopPropagation();saveSub()" id="saveSubBtn"><span class="material-icons-round">check</span> <span id="saveSubBtnTxt">Save Subject</span></button>
     </div>
@@ -956,21 +953,21 @@ function addSubject(){
   document.getElementById('addSheetTitle').textContent='Add New Subject';
   document.getElementById('saveSubBtnTxt').textContent='Save Subject';
   document.getElementById('subName').value='';
-  document.getElementById('subCode').value='';
   openSheet('addSheet');
   setTimeout(()=>document.getElementById('subName').focus(),400);
 }
 
 function saveSub(){
   const name=document.getElementById('subName').value.trim();
-  const code=document.getElementById('subCode').value.trim().toUpperCase().substr(0,6);
+  // Auto-generate code from first 2 letters of name
+  const code=name.substr(0,2).toUpperCase();
   if(!name){document.getElementById('subName').style.animation='shake .4s';setTimeout(()=>document.getElementById('subName').style.animation='',400);return;}
   if(editId){
     const s=D.subjects.find(x=>x.id===editId);
-    if(s){s.name=name;s.code=code||name[0].toUpperCase();}
+    if(s){s.name=name;s.code=code;}
     toast('Subject updated!');
   }else{
-    D.subjects.push({id:Date.now()+'',name,code:code||name[0].toUpperCase(),at:new Date().toISOString()});
+    D.subjects.push({id:Date.now()+'',name,code,at:new Date().toISOString()});
     toast('Subject added!');
   }
   save();closeSheet('addSheet');renderHome();renderReports();
@@ -1005,7 +1002,6 @@ function editSub(id){
   document.getElementById('addSheetTitle').textContent='Edit Subject';
   document.getElementById('saveSubBtnTxt').textContent='Update Subject';
   document.getElementById('subName').value=s.name;
-  document.getElementById('subCode').value=s.code||'';
   openSheet('addSheet');
 }
 
