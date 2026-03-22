@@ -1,24 +1,43 @@
 <script>
-// ── SW Self-Serve: when loaded as ?sw=1, act as service worker ──
-if(typeof window!=='undefined'&&location.search==='?sw=1'){
-  // Loaded in SW context — skip HTML, SW listeners registered below
-}
+// ── SW Self-Serve: this file acts as its own Service Worker ──
+// When browser loads this as SW (no window object), run SW logic only
 if(typeof window==='undefined'){
-  // Actually running inside SW — handle events
-  const CACHE='sa-v4';
-  self.addEventListener('install',e=>{self.skipWaiting();});
-  self.addEventListener('activate',e=>{
-    e.waitUntil(caches.keys().then(ks=>
-      Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))
-    ).then(()=>self.clients.claim()));
+  const CACHE='sa-v5';
+  const PAGE_URL=self.location.href.split('?')[0]; // the actual HTML file URL
+
+  self.addEventListener('install',e=>{
+    self.skipWaiting();
+    // Cache the page immediately on install — eliminates loading bar on next open
+    e.waitUntil(
+      caches.open(CACHE).then(cache=>cache.add(PAGE_URL).catch(()=>{}))
+    );
   });
+
+  self.addEventListener('activate',e=>{
+    e.waitUntil(
+      caches.keys()
+        .then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
+        .then(()=>self.clients.claim())
+    );
+  });
+
   self.addEventListener('fetch',e=>{
-    const u=e.request.url;
-    if(!u.startsWith(self.location.origin.replace('?sw=1',''))||e.request.method!=='GET')return;
-    e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{
-      if(r&&r.status===200&&r.type==='basic'){const cl=r.clone();caches.open(CACHE).then(ca=>ca.put(e.request,cl));}
-      return r;
-    })));
+    if(e.request.method!=='GET') return;
+    const url=e.request.url;
+    // Skip external requests (fonts, CDN etc)
+    if(!url.startsWith(self.location.origin)) return;
+    e.respondWith(
+      caches.match(e.request).then(cached=>{
+        if(cached) return cached; // serve from cache — instant, no loading bar
+        return fetch(e.request).then(res=>{
+          if(res&&res.status===200&&res.type==='basic'){
+            const clone=res.clone();
+            caches.open(CACHE).then(cache=>cache.put(e.request,clone));
+          }
+          return res;
+        }).catch(()=>caches.match(PAGE_URL)); // offline fallback
+      })
+    );
   });
 }
 </script>
@@ -1147,8 +1166,6 @@ function getWeeklyOffForMonth(year, month){
   }
   return S.weeklyOff||0;
 }
-};save();renderHome();renderByDate();renderReports();toast('All data cleared!');
-}
 function openAbout(){openFull('aboutPage');}
 function openBackupPage(){
   const lbl=localStorage.getItem('sa_lastBk');
@@ -1651,7 +1668,7 @@ async function registerSW(){
   if(/claudeusercontent|srcdoc|about:/.test(location.href)) return;
 
   const SW = `
-const CACHE='sa-v4';
+const CACHE='sa-v5';
 self.addEventListener('install',e=>{self.skipWaiting();});
 self.addEventListener('activate',e=>{
   e.waitUntil(caches.keys().then(ks=>
