@@ -27,8 +27,9 @@ if(typeof window==='undefined'){
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#1a6b5a" media="(prefers-color-scheme: light)" id="themeColorLight">
-<meta name="theme-color" content="#1a6b5a" media="(prefers-color-scheme: dark)" id="themeColorDark">
+<meta name="theme-color" content="#4db89e" media="(prefers-color-scheme: dark)" id="themeColorDark">
 <meta name="theme-color" content="#1a6b5a" id="themeColorMeta">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -603,16 +604,19 @@ function applyTheme(){
   document.getElementById('darkTog').classList.toggle('on',S.dark);
   document.getElementById('darkVal').textContent=S.dark?'Dark':'Light';
   // Android status bar = topbar header color (primary)
-  // Light mode topbar: #1a6b5a | Dark mode topbar: #2a9e84
-  const lightColor='#1a6b5a';
-  const darkColor='#4db89e';
+  // Status bar = exact header primary color
+  const lightColor='#1a6b5a'; // light mode header
+  const darkColor='#4db89e';  // dark mode header
   const cur=S.dark?darkColor:lightColor;
-  const m1=document.getElementById('themeColorMeta');
-  const m2=document.getElementById('themeColorLight');
-  const m3=document.getElementById('themeColorDark');
-  if(m1)m1.setAttribute('content',cur);
-  if(m2)m2.setAttribute('content',lightColor);
-  if(m3)m3.setAttribute('content',darkColor);
+  ['themeColorMeta','themeColorLight','themeColorDark'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.setAttribute('content', id==='themeColorDark' ? darkColor : id==='themeColorLight' ? lightColor : cur);
+  });
+  // Force browser to re-read theme-color by toggling media attribute
+  const ml=document.getElementById('themeColorLight');
+  const md=document.getElementById('themeColorDark');
+  if(ml) ml.setAttribute('media', S.dark ? 'not all' : '(prefers-color-scheme: light)');
+  if(md) md.setAttribute('media', S.dark ? '(prefers-color-scheme: dark)' : 'not all');
   const apMeta=document.getElementById('appleStatusBar');
   if(apMeta)apMeta.setAttribute('content',S.dark?'black':'black-translucent');
 }
