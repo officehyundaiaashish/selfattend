@@ -120,8 +120,9 @@ select:-webkit-autofill {
 .cal-day.s-L{background:#e65100;color:#fff;font-weight:900;}
 .cal-day.s-HD{background:#6a1b9a;color:#fff;font-weight:900;}
 .cal-day.s-POT,.cal-day.s-AOT{background:#283593;color:#fff;font-weight:900;}
-.cal-day.wo-day{background:var(--surface2);color:var(--text3);position:relative;}
-.cal-day.wo-day::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--text3);opacity:.6;}
+.cal-day.wo-day{background:var(--border);color:var(--text2);position:relative;font-size:9px;flex-direction:column;gap:0;line-height:1;}
+.cal-day.wo-day .wo-num{font-size:12px;font-weight:700;line-height:1.2;}
+.cal-day.wo-day .wo-lbl{font-size:7px;font-weight:700;letter-spacing:0.3px;opacity:.8;text-transform:uppercase;}
 .legend-row{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 12px;}
 .legend-chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
 .overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:100;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px);}
@@ -339,11 +340,6 @@ select:-webkit-autofill {
             <div class="settings-text"><div class="settings-label">Backup & Restore</div><div class="settings-value">Local file backup</div></div>
             <span class="material-icons-round" style="color:var(--text3)">chevron_right</span>
           </div>
-          <div class="settings-item" onclick="clearAll()">
-            <div class="settings-icon" style="background:#ffebee"><span class="material-icons-round" style="color:#c62828">delete_forever</span></div>
-            <div class="settings-text"><div class="settings-label">Clear All Data</div><div class="settings-value" style="color:#c62828">Permanently delete everything</div></div>
-            <span class="material-icons-round" style="color:var(--text3)">chevron_right</span>
-          </div>
         </div>
         <div class="settings-group">
           <div class="settings-group-label">About</div>
@@ -477,7 +473,7 @@ select:-webkit-autofill {
     <div class="sheet-subtitle" id="markSub"></div>
     <div class="status-grid" id="statusGrid"></div>
     <div class="note-input-wrap">
-      <textarea id="attNote" rows="2" autocomplete="new-password" autocorrect="off" autocapitalize="sentences" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" role="presentation"></textarea>
+      <textarea id="attNote" rows="2" placeholder="Enter your remarks if any..." autocomplete="new-password" autocorrect="off" autocapitalize="sentences" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" role="presentation"></textarea>
     </div>
     <div style="padding:0 16px 8px">
       <button class="btn-primary" onclick="saveAtt()"><span class="material-icons-round">check</span> Save</button>
@@ -720,7 +716,7 @@ function renderCalView(s){
     const isT=ds===tod?'today':'';
     const dow=new Date(sdY,sdM,d).getDay();
     const isWO=(dow===weekOff)&&!r;
-    cells+=`<button class="cal-day ${sc} ${isT}${isWO?' wo-day':''}" onclick="markAtt('${curSub}','${ds}')" ${isWO?'title="Weekly Off"':''}>${d}</button>`;
+    cells+=`<button class="cal-day ${sc} ${isT}${isWO?' wo-day':''}" onclick="markAtt('${curSub}','${ds}')">${isWO?`<span class='wo-num'>${d}</span><span class='wo-lbl'>WO</span>`:d}</button>`;
   }
   const legends=[{k:'P',l:'Present'},{k:'A',l:'Absent'},{k:'H',l:'Holiday'},{k:'L',l:'Leave'},{k:'HD',l:'Half Day'}];
   const today=new Date(),unmarked=[];
@@ -1151,9 +1147,7 @@ function getWeeklyOffForMonth(year, month){
   }
   return S.weeklyOff||0;
 }
-async function clearAll(){
-  if(!await confirm2('Clear All Data?','This will permanently delete ALL subjects and attendance records!',true))return;
-  D={subjects:[],attendance:{}};save();renderHome();renderByDate();renderReports();toast('All data cleared!');
+};save();renderHome();renderByDate();renderReports();toast('All data cleared!');
 }
 function openAbout(){openFull('aboutPage');}
 function openBackupPage(){
