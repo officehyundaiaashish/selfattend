@@ -1557,14 +1557,15 @@ function cancelLongPress(){
 
 
 // ── PWA Service Worker — Single File Trick ──
-// This HTML file registers ITSELF as the service worker
-// When loaded as SW (no window), the script at top handles SW events
 (function(){
   if(!('serviceWorker' in navigator)) return;
-  var url = location.href.split('?')[0]; // same file, no query
+  var proto = location.protocol;
+  // Only works over http/https — not file://, about:, blob: etc
+  if(proto !== 'http:' && proto !== 'https:') return;
+  var url = location.href.split('?')[0].split('#')[0];
   navigator.serviceWorker.register(url, {scope: './'})
-    .then(function(r){ console.log('SW registered (self):', r.scope); })
-    .catch(function(e){ console.log('SW failed:', e.message); });
+    .then(function(r){ console.log('SW ok:', r.scope); })
+    .catch(function(e){ console.log('SW skip:', e.message); });
 })();
 
 // ── PWA Install Prompt ──
