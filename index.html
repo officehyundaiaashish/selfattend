@@ -614,6 +614,7 @@ function applyTheme(){
   if(tc) tc.setAttribute('content', S.dark ? '#4db89e' : '#1a6b5a');
   const apMeta = document.getElementById('appleStatusBar');
   if(apMeta) apMeta.setAttribute('content', S.dark ? 'black' : 'black-translucent');
+}
 function applyS(){
   document.getElementById('targetVal').textContent=S.targetPct+'%';
   document.getElementById('otTog').classList.toggle('on',S.showOT);
