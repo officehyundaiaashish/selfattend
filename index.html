@@ -27,7 +27,7 @@ if(typeof window==='undefined'){
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#f5faf8" id="themeColorMeta">
+<meta name="theme-color" content="#1a6b5a" id="themeColorMeta">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default" id="appleStatusBar">
@@ -600,11 +600,11 @@ function applyTheme(){
   document.documentElement.setAttribute('data-theme',S.dark?'dark':'');
   document.getElementById('darkTog').classList.toggle('on',S.dark);
   document.getElementById('darkVal').textContent=S.dark?'Dark':'Light';
-  // Android status bar + browser tab colour = surface bg colour
+  // Android status bar = header (primary) color — matches topbar
   const meta=document.getElementById('themeColorMeta');
-  if(meta)meta.setAttribute('content',S.dark?'#0d1f1b':'#f5faf8');
+  if(meta)meta.setAttribute('content',S.dark?'#4db89e':'#1a6b5a');
   const apMeta=document.getElementById('appleStatusBar');
-  if(apMeta)apMeta.setAttribute('content',S.dark?'black':'default');
+  if(apMeta)apMeta.setAttribute('content','black-translucent');
 }
 function applyS(){
   document.getElementById('targetVal').textContent=S.targetPct+'%';
