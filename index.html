@@ -364,6 +364,19 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-i
 .target-input-wrap input[type=range]{width:100%;accent-color:var(--primary);height:6px;border-radius:3px;outline:none;-webkit-appearance:none;appearance:none;background:var(--border);cursor:pointer;}
 .target-input-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--primary);cursor:pointer;box-shadow:0 2px 8px rgba(26,107,90,.3);}
 .target-val-display{text-align:center;font-size:32px;font-weight:900;color:var(--primary);font-family:'DM Sans',sans-serif;padding:8px 0 4px;}
+/* ── Salary Calculator ── */
+.sal-hero{background:var(--primary);color:#fff;padding:20px 16px 28px;text-align:center;}
+.sal-amount{font-size:38px;font-weight:700;font-family:'DM Sans',sans-serif;letter-spacing:-.5px;line-height:1.1;}
+.sal-label{font-size:13px;opacity:.8;margin-top:4px;font-weight:400;}
+.sal-card{background:var(--card);border-radius:var(--radius);margin:12px 12px 0;border:1px solid var(--border);overflow:hidden;}
+.sal-card-title{font-size:11px;font-weight:600;color:var(--primary);text-transform:uppercase;letter-spacing:1px;padding:12px 16px 4px;}
+.sal-row{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-top:1px solid var(--border);}
+.sal-row-label{font-size:14px;color:var(--text2);display:flex;align-items:center;gap:8px;}
+.sal-row-val{font-size:14px;font-weight:600;color:var(--text);}
+.sal-row-val.deduct{color:var(--absent);}
+.sal-row-val.earn{color:var(--present);}
+.sal-net-card{background:var(--primary);border-radius:var(--radius);margin:12px 12px 0;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
+.sal-breakdown-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -419,13 +432,17 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-i
     <!-- REPORTS -->
     <div class="page" id="page-reports">
       <div style="padding:12px 0 80px">
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px 8px;">
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 12px 8px;">
           <button class="filter-chip active" onclick="filterReport('all',this)" style="flex-shrink:0">All Subjects</button>
           <div class="rpt-month-nav" style="flex:1">
             <button class="rpt-month-nav-btn" onclick="navReport(-1)">&#8249;</button>
             <span class="rpt-month-label-inner" id="rptMonthLabel">This Month</span>
             <button class="rpt-month-nav-btn" onclick="navReport(1)">&#8250;</button>
           </div>
+          <button onclick="openSalaryCalc()" style="flex-shrink:0;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:'Inter',sans-serif">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Salary
+          </button>
         </div>
         <div id="rptList"></div>
       </div>
@@ -458,6 +475,14 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-i
             <div class="settings-icon" style="background:#e3f2fd"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
             <div class="settings-text"><div class="settings-label">Weekly Off Day</div><div class="settings-value" id="weeklyOffVal">Sunday</div></div>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-group-label">Salary</div>
+          <div class="settings-item" onclick="editSalary()">
+            <div class="settings-icon" style="background:#e8f5e9"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="settings-text"><div class="settings-label">Monthly Salary</div><div class="settings-value" id="salaryVal">Not set</div></div>
+            <span class="material-icons-round" style="color:var(--text3)">chevron_right</span>
           </div>
         </div>
         <div class="settings-group">
@@ -751,6 +776,30 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-i
     </div>
   </div>
 </div>
+<!-- Salary input sheet -->
+<div class="overlay" id="salaryInputSheet" onclick="bgClose(this,event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Monthly Salary</div>
+    <div class="form-field">
+      <label>Gross Monthly Salary (₹)</label>
+      <input type="number" id="salaryInput" placeholder="e.g. 25000" inputmode="numeric" min="0">
+    </div>
+    <div style="padding:0 16px 16px">
+      <button class="btn-primary" onclick="applySalary()"><span class="material-icons-round">check</span> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Salary Calculator full page -->
+<div class="full-page" id="salaryPage">
+  <div class="topbar" style="background:var(--primary)">
+    <button class="icon-btn" onclick="closeFull('salaryPage')"><span class="material-icons-round">arrow_back</span></button>
+    <div class="topbar-title">Salary Calculator</div>
+  </div>
+  <div style="overflow-y:auto;flex:1;overflow-x:hidden;" id="salaryPageBody"></div>
+</div>
+
 </div><!-- end #app -->
 
 <script>
@@ -758,7 +807,7 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-i
 // DATA & STATE
 // =========================================
 let D={subjects:[],attendance:{}};
-let S={dark:false,targetPct:75,showOT:false,weeklyOff:0,weeklyOffHistory:{}}; // weeklyOff: 0=Sun,1=Mon,...,6=Sat
+let S={dark:false,targetPct:75,showOT:false,weeklyOff:0,weeklyOffHistory:{},salary:0};
 let tab='home',curSub=null,curView='cal',sdM=new Date().getMonth(),sdY=new Date().getFullYear();
 let bDate=new Date(),markCtx=null,selStatus=null,editId=null,cfCb=null,rptM=new Date().getMonth(),rptY=new Date().getFullYear();
 
@@ -811,7 +860,7 @@ function load(){
       if(p.db) D = p.db;
       if(p.settings){
         S = Object.assign(
-          {dark:false, targetPct:75, showOT:false, weeklyOff:0, weeklyOffHistory:{}},
+          {dark:false, targetPct:75, showOT:false, weeklyOff:0, weeklyOffHistory:{}, salary:0},
           p.settings
         );
       }
@@ -864,6 +913,8 @@ function applyS(){
   const DAYS_SHORT=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const wEl=document.getElementById('weeklyOffVal');
   if(wEl)wEl.textContent=DAYS_SHORT[S.weeklyOff]||'Sunday';
+  const sEl=document.getElementById('salaryVal');
+  if(sEl)sEl.textContent=S.salary>0?'₹'+Number(S.salary).toLocaleString('en-IN'):'Not set';
 }
 
 // =========================================
@@ -1192,6 +1243,7 @@ function navReport(dir){
   if(rptM<0){rptM=11;rptY--;}
   if(rptM>11){rptM=0;rptY++;}
   renderReports();
+  if(document.getElementById('salaryPage').style.display==='flex') renderSalaryPage();
 }
 
 function filterReport(t,btn){
@@ -1489,6 +1541,175 @@ function getWeeklyOffForMonth(year, month){
 }
 function openAbout(){openFull('aboutPage');}
 
+// =========================================
+// SALARY CALCULATOR
+// =========================================
+function editSalary(){
+  document.getElementById('salaryInput').value = S.salary || '';
+  openSheet('salaryInputSheet');
+  setTimeout(()=>document.getElementById('salaryInput').focus(), 350);
+}
+function applySalary(){
+  const v = parseFloat(document.getElementById('salaryInput').value) || 0;
+  S.salary = v;
+  save(); applyS();
+  closeSheet('salaryInputSheet');
+  toast(v > 0 ? 'Salary saved: ₹' + v.toLocaleString('en-IN') : 'Salary cleared');
+}
+
+function openSalaryCalc(){
+  openFull('salaryPage');
+  renderSalaryPage();
+}
+
+function renderSalaryPage(){
+  const body = document.getElementById('salaryPageBody');
+  if(!body) return;
+
+  // No salary set
+  if(!S.salary || S.salary <= 0){
+    body.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:60px 24px;text-align:center;">
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--primary-container);display:flex;align-items:center;justify-content:center;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div>
+          <div style="font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px">Salary not set</div>
+          <div style="font-size:14px;color:var(--text2);line-height:1.6">Go to Settings → Monthly Salary<br>to set your gross monthly salary.</div>
+        </div>
+        <button class="btn-primary" style="max-width:200px" onclick="closeFull('salaryPage');switchTab('settings');setTimeout(editSalary,400)">
+          <span class="material-icons-round">settings</span> Set Salary
+        </button>
+      </div>`;
+    return;
+  }
+
+  if(!D.subjects.length){
+    body.innerHTML = `<div class="empty-state"><div class="empty-icon"><span class="material-icons-round">bar_chart</span></div><h3>No Subjects</h3><p>Add subjects and mark attendance first.</p></div>`;
+    return;
+  }
+
+  const salary = S.salary;
+  const mn = MONTHS[rptM], yr = rptY;
+
+  // Working days in month (calendar days minus weekly offs)
+  const weekOff = getWeeklyOffForMonth(yr, rptM);
+  const daysInMonth = new Date(yr, rptM + 1, 0).getDate();
+  let calWorkDays = 0;
+  for(let d = 1; d <= daysInMonth; d++){
+    const dow = new Date(yr, rptM, d).getDay();
+    if(dow !== weekOff) calWorkDays++;
+  }
+
+  const perDay = salary / calWorkDays;
+
+  // Aggregate all subjects for this month
+  let totalP=0, totalA=0, totalH=0, totalL=0, totalHD=0, totalPOT=0, totalAOT=0;
+  D.subjects.forEach(s => {
+    const att = D.attendance[s.id] || [];
+    att.forEach(a => {
+      const d = new Date(a.date);
+      if(d.getMonth() !== rptM || d.getFullYear() !== yr) return;
+      if(a.s==='P')  totalP++;
+      else if(a.s==='A')  totalA++;
+      else if(a.s==='H')  totalH++;
+      else if(a.s==='L')  totalL++;
+      else if(a.s==='HD') totalHD++;
+      else if(a.s==='POT') totalPOT++;
+      else if(a.s==='AOT') totalAOT++;
+    });
+  });
+
+  // Salary calc (LOP basis — Indian standard)
+  // Paid: Present + Holiday + Leave = full day. Half Day = 0.5. Absent = 0 (deducted)
+  // Net = Salary - (Absent * perDay) - (HalfDay * 0.5 * perDay) - (AOT absent portion)
+  const absentDays = totalA + totalAOT;
+  const halfDays   = totalHD;
+  const absentDeduction = absentDays * perDay;
+  const hdDeduction     = halfDays * 0.5 * perDay;
+  const totalDeduction  = absentDeduction + hdDeduction;
+  const netSalary       = Math.max(0, salary - totalDeduction);
+  const earnedPct       = Math.round((netSalary / salary) * 100);
+
+  const fmt = n => '₹' + Math.round(n).toLocaleString('en-IN');
+  const fmtDay = n => n + (n===1?' day':' days');
+
+  // Per-subject breakdown
+  const subBreakdown = D.subjects.map(s => {
+    const att = (D.attendance[s.id]||[]).filter(a => {
+      const d = new Date(a.date);
+      return d.getMonth()===rptM && d.getFullYear()===yr;
+    });
+    const p  = att.filter(a=>a.s==='P'||a.s==='POT').length;
+    const ab = att.filter(a=>a.s==='A'||a.s==='AOT').length;
+    const h  = att.filter(a=>a.s==='H').length;
+    const l  = att.filter(a=>a.s==='L').length;
+    const hd = att.filter(a=>a.s==='HD').length;
+    const ded = (ab * perDay) + (hd * 0.5 * perDay);
+    return {name:s.name, p, ab, h, l, hd, ded};
+  }).filter(s => s.p+s.ab+s.h+s.l+s.hd > 0);
+
+  body.innerHTML = `
+    <!-- Hero -->
+    <div class="sal-hero">
+      <div style="font-size:13px;opacity:.8;margin-bottom:8px;font-weight:500">${mn} ${yr} · Net Salary</div>
+      <div class="sal-amount">${fmt(netSalary)}</div>
+      <div class="sal-label">${earnedPct}% of ${fmt(salary)} gross</div>
+      ${totalDeduction>0?`<div style="margin-top:10px;display:inline-block;background:rgba(0,0,0,.2);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600">Deduction: ${fmt(totalDeduction)}</div>`:'<div style="margin-top:10px;display:inline-block;background:rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600">Full salary — no deductions</div>'}
+    </div>
+
+    <!-- Summary card -->
+    <div class="sal-card">
+      <div class="sal-card-title">Summary</div>
+      <div class="sal-row">
+        <span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#2e7d32"></span>Gross Salary</span>
+        <span class="sal-row-val">${fmt(salary)}</span>
+      </div>
+      <div class="sal-row">
+        <span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#1565c0"></span>Working Days (this month)</span>
+        <span class="sal-row-val">${fmtDay(calWorkDays)}</span>
+      </div>
+      <div class="sal-row">
+        <span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#388e3c"></span>Per Day Value</span>
+        <span class="sal-row-val">${fmt(perDay)}</span>
+      </div>
+    </div>
+
+    <!-- Attendance breakdown -->
+    <div class="sal-card">
+      <div class="sal-card-title">Attendance This Month</div>
+      ${totalP>0?`<div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#1b5e20"></span>Present (P/OT)</span><span class="sal-row-val earn">${fmtDay(totalP+totalPOT)}</span></div>`:''}
+      ${totalH>0?`<div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#1565c0"></span>Holiday</span><span class="sal-row-val">${fmtDay(totalH)}</span></div>`:''}
+      ${totalL>0?`<div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#e65100"></span>Leave (Paid)</span><span class="sal-row-val">${fmtDay(totalL)}</span></div>`:''}
+      ${totalHD>0?`<div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#6a1b9a"></span>Half Day</span><span class="sal-row-val deduct">−${fmt(hdDeduction)}</span></div>`:''}
+      ${absentDays>0?`<div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#c62828"></span>Absent</span><span class="sal-row-val deduct">−${fmt(absentDeduction)}</span></div>`:''}
+    </div>
+
+    ${subBreakdown.length > 1 ? `
+    <!-- Per subject -->
+    <div class="sal-card" style="margin-bottom:0">
+      <div class="sal-card-title">Per Subject</div>
+      ${subBreakdown.map(s=>`
+      <div class="sal-row">
+        <span class="sal-row-label" style="flex-direction:column;align-items:flex-start;gap:1px">
+          <span style="font-size:14px;color:var(--text);font-weight:500">${esc(s.name)}</span>
+          <span style="font-size:12px;color:var(--text3)">${s.p}P · ${s.ab}A · ${s.h}H · ${s.l}L · ${s.hd}HD</span>
+        </span>
+        <span class="sal-row-val ${s.ded>0?'deduct':''}">${s.ded>0?'−'+fmt(s.ded):'Full'}</span>
+      </div>`).join('')}
+    </div>` : ''}
+
+    <!-- Net result -->
+    <div class="sal-net-card">
+      <div>
+        <div style="color:rgba(255,255,255,.8);font-size:12px;font-weight:500;margin-bottom:2px">Net Take-Home · ${mn} ${yr}</div>
+        <div style="color:#fff;font-size:26px;font-weight:700;font-family:'DM Sans',sans-serif;letter-spacing:-.3px">${fmt(netSalary)}</div>
+      </div>
+      ${totalDeduction>0?`<div style="text-align:right"><div style="color:rgba(255,255,255,.7);font-size:11px;margin-bottom:2px">Deducted</div><div style="color:#ffcdd2;font-size:17px;font-weight:700">−${fmt(totalDeduction)}</div></div>`:'<div style="background:rgba(255,255,255,.2);border-radius:10px;padding:6px 12px;color:#fff;font-size:13px;font-weight:600">No deductions</div>'}
+    </div>
+    <div style="height:32px"></div>`;
+}
+
 function showUserPopup(){
   if(!gUser) return;
   document.getElementById('upName').textContent = gUser.displayName || gUser.email;
@@ -1722,12 +1943,14 @@ function anySheetOpen(){
          document.getElementById('addSheet').classList.contains('open')||
          document.getElementById('mPickSheet').classList.contains('open')||
          document.getElementById('targetSheet').classList.contains('open')||
+         document.getElementById('salaryInputSheet').classList.contains('open')||
          document.getElementById('confirmDlg').classList.contains('open');
 }
 function anyFullPageOpen(){
   return document.getElementById('sdPage').style.display==='flex'||
          document.getElementById('backupPage').style.display==='flex'||
-         document.getElementById('aboutPage').style.display==='flex';
+         document.getElementById('aboutPage').style.display==='flex'||
+         document.getElementById('salaryPage').style.display==='flex';
 }
 
 document.addEventListener('keydown',e=>{
@@ -1739,12 +1962,13 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();
     if(document.getElementById('confirmDlg').classList.contains('open')){cfResolve(false);return;}
     if(anySheetOpen()){
-      closeSheet('markSheet');closeSheet('addSheet');closeSheet('mPickSheet');closeSheet('targetSheet');return;
+      closeSheet('markSheet');closeSheet('addSheet');closeSheet('mPickSheet');closeSheet('targetSheet');closeSheet('salaryInputSheet');return;
     }
     if(document.getElementById('ctxMenu').classList.contains('open')){closeCtxMenu();return;}
     if(document.getElementById('sdPage').style.display==='flex'){closeSD();return;}
     if(document.getElementById('backupPage').style.display==='flex'){closeBackup();return;}
     if(document.getElementById('aboutPage').style.display==='flex'){closeFull('aboutPage');return;}
+    if(document.getElementById('salaryPage').style.display==='flex'){closeFull('salaryPage');return;}
     if(document.getElementById('searchWrap').style.display!=='none'){hideSearch();return;}
     return;
   }
@@ -1814,7 +2038,7 @@ let _backPressedOnce=false,_backTimer=null;
 window.addEventListener('popstate',()=>{
   if(document.getElementById('confirmDlg').classList.contains('open')){cfResolve(false);history.pushState(null,'',location.href);return;}
   if(anySheetOpen()){
-    closeSheet('markSheet');closeSheet('addSheet');closeSheet('mPickSheet');closeSheet('targetSheet');
+    closeSheet('markSheet');closeSheet('addSheet');closeSheet('mPickSheet');closeSheet('targetSheet');closeSheet('salaryInputSheet');
     const wo=document.getElementById('weeklyOffSheet');
     if(wo)closeSheet('weeklyOffSheet');
     history.pushState(null,'',location.href);return;
@@ -1825,6 +2049,7 @@ window.addEventListener('popstate',()=>{
   if(document.getElementById('sdPage').style.display==='flex'){closeSD();history.pushState(null,'',location.href);return;}
   if(document.getElementById('backupPage').style.display==='flex'){closeBackup();history.pushState(null,'',location.href);return;}
   if(document.getElementById('aboutPage').style.display==='flex'){closeFull('aboutPage');history.pushState(null,'',location.href);return;}
+  if(document.getElementById('salaryPage').style.display==='flex'){closeFull('salaryPage');history.pushState(null,'',location.href);return;}
   if(document.getElementById('searchWrap').style.display!=='none'){hideSearch();history.pushState(null,'',location.href);return;}
   if(tab!=='home'){switchTab('home');history.pushState(null,'',location.href);return;}
   // On home tab — double back to exit
