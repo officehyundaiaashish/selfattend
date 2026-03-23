@@ -719,7 +719,11 @@ function save(){
     localStorage.setItem('sa_app', str);
     localStorage.setItem('sa_d', JSON.stringify(D));
     localStorage.setItem('sa_s', JSON.stringify(S));
-  }catch(e){ console.warn('Save failed:',e); }
+    console.log('[SA] Saved:', D.subjects.length, 'subjects,', Object.keys(D.attendance).length, 'attendance records');
+  }catch(e){ 
+    console.error('[SA] Save failed:',e);
+    toast('⚠️ Save error! Data might be lost');
+  }
 }
 
 function load(){
@@ -736,6 +740,7 @@ function load(){
       }
       // Ensure attendance map exists for all subjects
       if(D.subjects) D.subjects.forEach(s=>{ if(!D.attendance[s.id]) D.attendance[s.id]=[]; });
+      console.log('[SA] Loaded:', D.subjects.length, 'subjects');
       return;
     }
     // Legacy fallback
@@ -744,7 +749,11 @@ function load(){
     const s = localStorage.getItem('sa_s');
     if(s) S = Object.assign(S, JSON.parse(s));
     if(D.subjects) D.subjects.forEach(sub=>{ if(!D.attendance[sub.id]) D.attendance[sub.id]=[]; });
-  }catch(e){ console.warn('Load failed:',e); }
+    console.log('[SA] Legacy load:', D.subjects.length, 'subjects');
+  }catch(e){ 
+    console.error('[SA] Load failed:',e);
+    setTimeout(()=>toast('⚠️ Data load error! Check console'),500);
+  }
 }
 
 // =========================================
