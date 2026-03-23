@@ -1638,14 +1638,35 @@ document.addEventListener('keydown',e=>{
 });
 
 // ── Mobile hardware Back button (Android) ──
+let _backPressedOnce=false,_backTimer=null;
 window.addEventListener('popstate',()=>{
-  if(document.getElementById('confirmDlg').classList.contains('open')){cfResolve(false);return;}
-  if(anySheetOpen()){closeSheet('markSheet');closeSheet('addSheet');closeSheet('mPickSheet');history.pushState(null,'',location.href);return;}
+  if(document.getElementById('confirmDlg').classList.contains('open')){cfResolve(false);history.pushState(null,'',location.href);return;}
+  if(anySheetOpen()){
+    closeSheet('markSheet');closeSheet('addSheet');closeSheet('mPickSheet');
+    const wo=document.getElementById('weeklyOffSheet');
+    if(wo)closeSheet('weeklyOffSheet');
+    history.pushState(null,'',location.href);return;
+  }
   if(document.getElementById('ctxMenu').classList.contains('open')){closeCtxMenu();history.pushState(null,'',location.href);return;}
+  const mc=document.getElementById('miniCalOverlay');
+  if(mc&&mc.classList.contains('open')){closeMiniCal();history.pushState(null,'',location.href);return;}
   if(document.getElementById('sdPage').style.display==='flex'){closeSD();history.pushState(null,'',location.href);return;}
   if(document.getElementById('backupPage').style.display==='flex'){closeBackup();history.pushState(null,'',location.href);return;}
   if(document.getElementById('aboutPage').style.display==='flex'){closeFull('aboutPage');history.pushState(null,'',location.href);return;}
   if(document.getElementById('searchWrap').style.display!=='none'){hideSearch();history.pushState(null,'',location.href);return;}
+  if(tab!=='home'){switchTab('home');history.pushState(null,'',location.href);return;}
+  // On home tab — double back to exit
+  history.pushState(null,'',location.href); // keep state so next back triggers popstate again
+  if(_backPressedOnce){
+    clearTimeout(_backTimer);_backPressedOnce=false;
+    if(window.navigator.standalone||window.matchMedia('(display-mode:standalone)').matches){
+      window.close();
+    }
+    return;
+  }
+  _backPressedOnce=true;
+  toast('Press back again to exit');
+  _backTimer=setTimeout(()=>{_backPressedOnce=false;},2500);
 });
 // Initial history state push taaki popstate kaam kare
 history.pushState(null,'',location.href);
