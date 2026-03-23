@@ -495,31 +495,33 @@ select:-webkit-autofill {
         <div style="flex:1;height:1px;background:var(--border)"></div>
       </div>
 
-      <!-- Data summary -->
-      <div id="backupSummary" style="background:var(--card);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.9;border:1px solid var(--border)"></div>
-
-      <!-- Local backup + restore in one card -->
+      <!-- Local backup card — same layout as Google card -->
       <div style="background:var(--card);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border)">
-        <button onclick="doBackup()" style="display:flex;align-items:center;gap:14px;padding:16px;width:100%;background:transparent;border:none;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s">
-          <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:#e8f5e9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <span class="material-icons-round" style="color:#2e7d32;font-size:22px">save_alt</span>
+        <!-- Header row -->
+        <div style="display:flex;align-items:center;gap:14px;padding:16px">
+          <div style="width:44px;height:44px;border-radius:50%;background:#e8f5e9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span class="material-icons-round" style="color:#2e7d32;font-size:22px">folder</span>
           </div>
-          <div style="flex:1;text-align:left">
-            <div style="font-size:15px;font-weight:700;color:var(--text)">Save backup file</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:15px;font-weight:700;color:var(--text)">Local Storage</div>
             <div style="font-size:12px;color:var(--text2);margin-top:1px" id="lastBackupLbl">No backup taken yet</div>
           </div>
-          <span class="material-icons-round" style="color:var(--text3)">chevron_right</span>
-        </button>
-        <button onclick="document.getElementById('fileIn').click()" style="display:flex;align-items:center;gap:14px;padding:16px;width:100%;background:transparent;border:none;cursor:pointer;transition:background .15s">
-          <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:#e3f2fd;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <span class="material-icons-round" style="color:#1565c0;font-size:22px">upload_file</span>
+        </div>
+        <!-- Data summary -->
+        <div id="backupSummary" style="margin:0 16px 12px;background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.8"></div>
+        <!-- Action buttons — same grid as Google -->
+        <div style="border-top:1px solid var(--border)">
+          <div style="display:grid;grid-template-columns:1fr 1fr">
+            <button onclick="doBackup()" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;background:transparent;border:none;cursor:pointer;border-right:1px solid var(--border)">
+              <span class="material-icons-round" style="font-size:26px;color:#2e7d32">save_alt</span>
+              <span style="font-size:13px;font-weight:700;color:var(--text)">Back up</span>
+            </button>
+            <button onclick="document.getElementById('fileIn').click()" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;background:transparent;border:none;cursor:pointer">
+              <span class="material-icons-round" style="font-size:26px;color:#1565c0">upload_file</span>
+              <span style="font-size:13px;font-weight:700;color:var(--text)">Restore</span>
+            </button>
           </div>
-          <div style="flex:1;text-align:left">
-            <div style="font-size:15px;font-weight:700;color:var(--text)">Restore from file</div>
-            <div style="font-size:12px;color:var(--text2);margin-top:1px">Choose a .json backup file</div>
-          </div>
-          <span class="material-icons-round" style="color:var(--text3)">chevron_right</span>
-        </button>
+        </div>
       </div>
 
     </div>
@@ -668,7 +670,6 @@ select:-webkit-autofill {
 
 <div class="toast" id="toast"></div>
 <input type="file" id="fileIn" accept=".json" onchange="doRestore(this)" style="display:none" autocomplete="off">
-<input type="date" id="dateIn" style="display:none" onchange="setDate(this.value)" autocomplete="off">
 </div><!-- end #app -->
 
 <script>
@@ -1096,17 +1097,36 @@ function filterReport(t,btn){
   btn.classList.add('active');
 }
 
+let _mpSelM=0,_mpSelY=new Date().getFullYear();
+
 function showMonthPicker(){
-  const sm=document.getElementById('mpMonth'),sy=document.getElementById('mpYear');
-  sm.value=rptM;sy.innerHTML='';
-  const cy=new Date().getFullYear();
-  for(let y=cy-3;y<=cy+1;y++)sy.innerHTML+=`<option value="${y}" ${y===rptY?'selected':''}>${y}</option>`;
+  _mpSelM=rptM; _mpSelY=rptY;
+  renderMpGrid();
   openSheet('mPickSheet');
 }
+
+function renderMpGrid(){
+  document.getElementById('mpYearVal').textContent=_mpSelY;
+  const MNAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('mpMonthGrid').innerHTML=MNAMES.map((m,i)=>
+    `<div class="mp-cell${i===_mpSelM?' active':''}" onclick="mpSelMonth(${i})">${m}</div>`
+  ).join('');
+}
+
+function mpSelMonth(i){
+  _mpSelM=i;
+  document.querySelectorAll('.mp-cell').forEach((el,idx)=>el.classList.toggle('active',idx===i));
+}
+
+function mpNavYear(dir){
+  const cy=new Date().getFullYear();
+  _mpSelY=Math.max(2020,Math.min(cy+1,_mpSelY+dir));
+  renderMpGrid();
+}
+
 function applyMonth(){
-  rptM=parseInt(document.getElementById('mpMonth').value);
-  rptY=parseInt(document.getElementById('mpYear').value);
-  closeSheet('mPickSheet');renderReports();
+  rptM=_mpSelM; rptY=_mpSelY;
+  closeSheet('mPickSheet'); renderReports();
 }
 
 // =========================================
@@ -1143,8 +1163,14 @@ function shareRpt(id){
   const att=D.attendance[id]||[];
   const withRemarks=att.filter(a=>a.n&&a.n.trim()).length;
   const txt=` Attendance - ${s.name}\n Present: ${st.present}\n Absent: ${st.absent}\n Holiday: ${st.holiday}\n Leave: ${st.leave}\n Percentage: ${pct}%`;
-  if(navigator.share)navigator.share({title:s.name+' Attendance',text:txt}).catch(()=>clip(txt));
-  else{clip(txt);toast('Copied to clipboard!');}
+  // Capacitor Share plugin or Web Share API
+  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Share){
+    window.Capacitor.Plugins.Share.share({title:s.name+' Attendance',text:txt,dialogTitle:'Share Attendance'}).catch(()=>clip(txt));
+  } else if(navigator.share){
+    navigator.share({title:s.name+' Attendance',text:txt}).catch(()=>clip(txt));
+  } else {
+    clip(txt);
+  }
 }
 
 // =========================================
@@ -1375,10 +1401,7 @@ function openBackupPage(){
 }
 
 // Unified backup — opens dialog if Google logged in
-function openUnifiedBackup(){
-  if(gUser){openBackupPage();}
-  else{openBackupPage();}
-}
+function openUnifiedBackup(){ openBackupPage(); }
 function closeBackup(){closeFull('backupPage');}
 
 // =========================================
@@ -1545,31 +1568,36 @@ function pad(n){return String(n).padStart(2,'0');}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 async function dlFile(name, content, mime){
   const blob = new Blob([content], {type: mime});
-  // Try modern File System Access API — shows native Save dialog
-  if(window.showSaveFilePicker){
+  // Capacitor: use Filesystem plugin if available
+  if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem){
     try{
-      const ext = name.split('.').pop();
-      const types = [{
-        description: ext.toUpperCase() + ' File',
-        accept: {[mime]: ['.'+ext]}
-      }];
-      const fh = await window.showSaveFilePicker({suggestedName: name, types});
-      const writable = await fh.createWritable();
-      await writable.write(blob);
-      await writable.close();
-      toast('File saved to device!');
+      const {Filesystem,Directory} = window.Capacitor.Plugins;
+      const base64 = await blobToBase64(blob);
+      await Filesystem.writeFile({
+        path: name,
+        data: base64,
+        directory: Directory.Documents,
+        recursive: true
+      });
+      toast('Saved to Documents: ' + name);
       return;
-    } catch(e){
-      if(e.name === 'AbortError') return; // user cancelled
-      // fall through to download
-    }
+    } catch(e){ console.warn('Capacitor FS failed:',e); }
   }
-  // Fallback — standard download (saves to Downloads folder)
+  // Web fallback — blob download
   const u = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = u; a.download = name; a.click();
   URL.revokeObjectURL(u);
-  toast('Saved to Downloads folder');
+  toast('File downloaded');
+}
+
+function blobToBase64(blob){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result.split(',')[1]);
+    r.onerror=rej;
+    r.readAsDataURL(blob);
+  });
 }
 function clip(t){
   navigator.clipboard.writeText(t).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');document.body.removeChild(a);});
@@ -2053,7 +2081,7 @@ document.addEventListener('DOMContentLoaded', function(){
 // ═══════════════════════════════════════════════════════
 // Guard: run Firebase init only when SDK is available
 function initFirebase(){
-  if(typeof firebase === 'undefined'){
+if(typeof firebase === 'undefined'){
     // Retry after short delay (offline / slow load)
     setTimeout(initFirebase, 300);
     return;
@@ -2201,6 +2229,9 @@ async function gSignOut(skipConfirm=false){
 }
 
 // ── Google Backup — save to Firestore ──
+} // end initFirebase
+
+// Google backup/restore — global scope so HTML buttons can call them
 async function doGoogleBackup(){
   if(!gUser){ toast('Sign in first'); return; }
   const statusEl = document.getElementById('gSyncStatus');
@@ -2275,7 +2306,6 @@ setTimeout(()=>{
   const f=document.getElementById('mainFab');
   f.style.animation='fabIn .5s cubic-bezier(.34,1.56,.64,1) .3s both';
 },100);
-} // end initFirebase
 </script>
 </body>
 </html>
