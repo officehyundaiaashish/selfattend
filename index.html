@@ -53,7 +53,13 @@ if(typeof window==='undefined'){
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect width='48' height='48' rx='12' fill='%231a6b5a'/><rect x='12' y='8' width='24' height='4' rx='2' fill='white' opacity='.6'/><rect x='10' y='16' width='28' height='22' rx='4' fill='white'/><rect x='14' y='20' width='4' height='4' rx='1' fill='%231a6b5a'/><rect x='14' y='26' width='4' height='4' rx='1' fill='%231a6b5a'/><rect x='20' y='20' width='14' height='2' rx='1' fill='%231a6b5a' opacity='.4'/><rect x='20' y='24' width='10' height='2' rx='1' fill='%231a6b5a' opacity='.4'/><rect x='20' y='28' width='12' height='2' rx='1' fill='%231a6b5a' opacity='.4'/></svg>">
 <link rel="manifest" id="pwaManifest">
 <title>Self Attendance</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 <style>
 :root{--primary:#1a6b5a;--primary-light:#25917a;--primary-dark:#0f4a3e;--primary-container:#c8f0e8;--on-primary:#fff;--secondary:#4caf91;--accent:#ff8a65;--surface:#f5faf8;--surface2:#eaf4f0;--card:#fff;--card2:#f0faf6;--text:#0d2b24;--text2:#4a7368;--text3:#7a9e96;--border:#d0e8e2;--present-bg:#e8f5e9;--present:#2e7d32;--absent-bg:#ffebee;--absent:#c62828;--holiday-bg:#e3f2fd;--holiday:#1565c0;--leave-bg:#fff3e0;--leave:#e65100;--halfday-bg:#f3e5f5;--halfday:#6a1b9a;--ot-bg:#e8eaf6;--ot:#283593;--radius:16px;--radius-sm:10px;--radius-lg:24px;--shadow:0 2px 12px rgba(26,107,90,0.10);--shadow-md:0 4px 24px rgba(26,107,90,0.15);--shadow-lg:0 8px 40px rgba(26,107,90,0.18);--transition:0.25s cubic-bezier(0.4,0,0.2,1);}
@@ -262,6 +268,16 @@ select:-webkit-autofill {
 .about-item{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);}
 .about-item:last-child{border-bottom:none;}
 
+
+.user-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.5);cursor:pointer;flex-shrink:0;}
+.user-avatar-placeholder{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.google-signin-btn{display:flex;align-items:center;gap:10px;background:#fff;color:#444;border:none;border-radius:var(--radius);padding:12px 16px;font-size:14px;font-weight:700;cursor:pointer;width:100%;font-family:'Nunito',sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.15);transition:all .15s;}
+.google-signin-btn:active{transform:scale(.98);}
+.google-signin-btn svg{flex-shrink:0;}
+.sync-status{font-size:12px;color:var(--text2);margin-top:6px;}
+.sync-status.syncing{color:var(--primary);}
+.sync-status.error{color:var(--absent);}
+
 .mini-cal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-start;justify-content:center;padding-top:120px;}
 .mini-cal-overlay.open{display:flex;}
 .mini-cal-box{background:var(--card);border-radius:var(--radius-lg);padding:0;width:calc(100% - 48px);max-width:340px;overflow:hidden;animation:popIn .22s cubic-bezier(.34,1.56,.64,1) both;}
@@ -425,30 +441,71 @@ select:-webkit-autofill {
     <div class="topbar" style="background:var(--primary)">
       <button class="icon-btn" onclick="closeBackup()"><span class="material-icons-round">arrow_back</span></button>
       <div class="topbar-title">Backup & Restore</div>
+      <div id="topbarUserAvatar" style="margin-right:4px"></div>
     </div>
     <div style="overflow-y:auto;flex:1;padding-bottom:24px">
-      <div class="backup-card" style="margin-top:12px">
+
+      <!-- Google Account Card -->
+      <div class="backup-card" style="margin-top:12px" id="googleAccountCard">
+        <div class="backup-icon-row">
+          <div id="gAuthAvatarArea">
+            <div class="user-avatar-placeholder" onclick="gSignIn()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+          </div>
+          <div style="flex:1">
+            <div class="backup-title" id="gAuthTitle">Google Account</div>
+            <div style="font-size:12px;color:var(--text2)" id="gAuthStatus">Not signed in</div>
+          </div>
+          <button id="gSignOutBtn" style="display:none;background:var(--surface2);color:var(--text2);border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif" onclick="gSignOut()">Sign Out</button>
+        </div>
+        <div id="gSignInArea">
+          <button class="google-signin-btn" onclick="gSignIn()">
+            <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            Sign in with Google
+          </button>
+        </div>
+        <div id="gBackupArea" style="display:none;margin-top:12px">
+          <div style="display:flex;gap:8px">
+            <button class="btn-primary" style="flex:1" onclick="doGoogleBackup()">
+              <span class="material-icons-round">cloud_upload</span> Backup to Google
+            </button>
+            <button class="btn-primary" style="flex:1;background:#1565c0" onclick="doGoogleRestore()">
+              <span class="material-icons-round">cloud_download</span> Restore from Google
+            </button>
+          </div>
+          <div class="sync-status" id="gSyncStatus"></div>
+        </div>
+      </div>
+
+      <!-- Local Backup Card -->
+      <div class="backup-card">
         <div class="backup-icon-row">
           <div class="backup-bicon" style="background:#e8f5e9"><span class="material-icons-round" style="font-size:28px;color:#2e7d32">save</span></div>
           <div><div class="backup-title">Local Backup</div><div style="font-size:12px;color:var(--text2)" id="lastBackupLbl">No backup taken yet</div></div>
         </div>
         <div id="backupSummary" style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:13px;color:var(--text2);line-height:1.8"></div>
-        <div class="backup-desc">Backup mein sab kuch included: subjects, har date ki attendance, aur aapki settings.</div>
-        <button class="btn-primary" onclick="doBackup()"><span class="material-icons-round">cloud_download</span> Create Backup File</button>
+        <div class="backup-desc">Sab kuch included: subjects, attendance, settings.</div>
+        <button class="btn-primary" onclick="doBackup()"><span class="material-icons-round">cloud_download</span> Save Backup File</button>
       </div>
+
+      <!-- Local Restore Card -->
       <div class="backup-card">
         <div class="backup-icon-row">
           <div class="backup-bicon" style="background:#e3f2fd"><span class="material-icons-round" style="font-size:28px;color:#1565c0">restore</span></div>
-          <div><div class="backup-title">Restore Data</div><div style="font-size:12px;color:var(--text2)">Select a .json backup file</div></div>
+          <div><div class="backup-title">Restore from File</div><div style="font-size:12px;color:var(--text2)">Select a local .json backup file</div></div>
         </div>
-        <div class="backup-desc">️ Restoring will overwrite all current data. Make sure you have a backup before proceeding.</div>
+        <div class="backup-desc"> Restoring will overwrite all current data.</div>
         <button class="btn-primary" style="background:#1565c0" onclick="document.getElementById('fileIn').click()"><span class="material-icons-round">upload_file</span> Choose Backup File</button>
       </div>
+
+      <!-- Export Card -->
       <div class="backup-card">
         <div class="backup-title" style="margin-bottom:8px">Export Data</div>
-        <div class="backup-desc">Export all attendance data to CSV format for spreadsheet use.</div>
+        <div class="backup-desc">Export all attendance data to CSV format.</div>
         <button class="btn-primary" style="background:#2e7d32" onclick="exportAllCSV()"><span class="material-icons-round">table_chart</span> Export All as CSV</button>
       </div>
+
     </div>
   </div>
 
@@ -1260,16 +1317,18 @@ function openAbout(){openFull('aboutPage');}
 function openBackupPage(){
   const lbl=localStorage.getItem('sa_lastBk');
   document.getElementById('lastBackupLbl').textContent=lbl?`Last backup: ${lbl}`:'No backup taken yet';
-
-  // Live summary
   let totalRec=0;
   D.subjects.forEach(s=>{totalRec+=(D.attendance[s.id]||[]).length;});
   const sum=document.getElementById('backupSummary');
   if(sum){
     sum.innerHTML=
       `<b>${D.subjects.length}</b> Subject(s) &nbsp;|&nbsp; <b>${totalRec}</b> Records<br>`+
-      `Dark Mode: <b>${S.dark?'ON':'OFF'}</b> &nbsp;|&nbsp; Target: <b>${S.targetPct}%</b> &nbsp;|&nbsp; OT: <b>${S.showOT?'ON':'OFF'}</b> &nbsp;|&nbsp; Weekly Off: <b>${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][S.weeklyOff]}</b>`;
+      `Dark: <b>${S.dark?'ON':'OFF'}</b> &nbsp;|&nbsp; Target: <b>${S.targetPct}%</b> &nbsp;|&nbsp; Weekly Off: <b>${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][S.weeklyOff]}</b>`;
   }
+  // Show Google last backup time
+  const gLbl = localStorage.getItem('sa_gLastBk');
+  const gSync = document.getElementById('gSyncStatus');
+  if(gSync) gSync.textContent = gLbl ? 'Last Google backup: '+gLbl : '';
   openFull('backupPage');
 }
 function closeBackup(){closeFull('backupPage');}
@@ -1896,6 +1955,199 @@ document.addEventListener('DOMContentLoaded', function(){
   });
   observer.observe(document.body, {childList:true, subtree:true});
 });
+
+
+// ═══════════════════════════════════════════════════════
+// FIREBASE — Google Auth + Firestore Backup
+// Project: Aashish Giri's existing Firestore project
+// ═══════════════════════════════════════════════════════
+const FB_CONFIG = {
+  apiKey: "AIzaSyD_REPLACE_WITH_YOUR_API_KEY",
+  authDomain: "REPLACE.firebaseapp.com",
+  projectId: "REPLACE_PROJECT_ID",
+  storageBucket: "REPLACE.appspot.com",
+  messagingSenderId: "REPLACE",
+  appId: "REPLACE"
+};
+
+// Initialize Firebase (only once)
+let fbApp, fbAuth, fbDb;
+try {
+  fbApp = firebase.app();
+} catch(e) {
+  fbApp = firebase.initializeApp(FB_CONFIG);
+}
+fbAuth = firebase.auth();
+fbDb   = firebase.firestore();
+
+// Access control is handled by Firestore security rules — no email list needed here
+let gUser = null;
+fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+fbAuth.onAuthStateChanged(user => {
+  if(user){
+    gUser = user;
+    localStorage.setItem('sa_guser', JSON.stringify({
+      email: user.email,
+      name: user.displayName,
+      photo: user.photoURL
+    }));
+    updateAuthUI(user);
+  } else {
+    gUser = null;
+    // Try to restore from localStorage (for display only)
+    const cached = localStorage.getItem('sa_guser');
+    if(cached){
+      const cu = JSON.parse(cached);
+      // Show cached but mark as needing re-auth
+      updateAuthUICached(cu);
+    } else {
+      updateAuthUI(null);
+    }
+  }
+});
+
+function updateAuthUI(user){
+  localStorage.removeItem('sa_guser_cached');
+  const signInArea = document.getElementById('gSignInArea');
+  const backupArea  = document.getElementById('gBackupArea');
+  const signOutBtn  = document.getElementById('gSignOutBtn');
+  const authTitle   = document.getElementById('gAuthTitle');
+  const authStatus  = document.getElementById('gAuthStatus');
+  const avatarArea  = document.getElementById('gAuthAvatarArea');
+  if(!signInArea) return;
+  if(user){
+    signInArea.style.display  = 'none';
+    backupArea.style.display  = '';
+    signOutBtn.style.display  = '';
+    authTitle.textContent     = user.displayName || user.email;
+    authStatus.textContent    = user.email;
+    // Avatar
+    if(user.photoURL){
+      avatarArea.innerHTML = `<img class="user-avatar" src="${user.photoURL}" alt="avatar" onclick="void(0)">`;
+    } else {
+      const initials = (user.displayName||user.email).charAt(0).toUpperCase();
+      avatarArea.innerHTML = `<div class="user-avatar-placeholder" style="background:var(--primary-light)">${initials}</div>`;
+    }
+    // Topbar avatar
+    const tv = document.getElementById('topbarUserAvatar');
+    if(tv && user.photoURL){
+      tv.innerHTML = `<img class="user-avatar" src="${user.photoURL}" alt="">`;
+    }
+  } else {
+    signInArea.style.display  = '';
+    backupArea.style.display  = 'none';
+    signOutBtn.style.display  = 'none';
+    authTitle.textContent     = 'Google Account';
+    authStatus.textContent    = 'Not signed in';
+    avatarArea.innerHTML = `<div class="user-avatar-placeholder" onclick="gSignIn()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`;
+    const tv = document.getElementById('topbarUserAvatar');
+    if(tv) tv.innerHTML='';
+  }
+}
+
+function updateAuthUICached(cu){
+  const authTitle  = document.getElementById('gAuthTitle');
+  const authStatus = document.getElementById('gAuthStatus');
+  const avatarArea = document.getElementById('gAuthAvatarArea');
+  const signInArea = document.getElementById('gSignInArea');
+  if(!authTitle) return;
+  authTitle.textContent  = (cu.name||cu.email) + ' (tap to re-sign in)';
+  authStatus.textContent = cu.email;
+  if(cu.photo && avatarArea){
+    avatarArea.innerHTML = `<img class="user-avatar" src="${cu.photo}" alt="" onclick="gSignIn()">`;
+  }
+  if(signInArea) signInArea.style.display = '';
+}
+
+async function gSignIn(){
+  try{
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({prompt:'select_account'});
+    await fbAuth.signInWithPopup(provider);
+  } catch(e){
+    if(e.code !== 'auth/popup-closed-by-user'){
+      toast('Sign in failed: ' + e.message);
+    }
+  }
+}
+
+async function gSignOut(){
+  if(!await confirm2('Sign Out?', 'You will be signed out of Google. Local data stays safe.',false)) return;
+  localStorage.removeItem('sa_guser');
+  await fbAuth.signOut();
+  gUser = null;
+  updateAuthUI(null);
+  toast('Signed out');
+}
+
+// ── Google Backup — save to Firestore ──
+async function doGoogleBackup(){
+  if(!gUser){ toast('Sign in first'); return; }
+  const statusEl = document.getElementById('gSyncStatus');
+  statusEl.textContent = 'Backing up...';
+  statusEl.className = 'sync-status syncing';
+  try{
+    const totalSubjects = D.subjects.length;
+    let totalRecords = 0;
+    D.subjects.forEach(s=>{ totalRecords += (D.attendance[s.id]||[]).length; });
+    const payload = {
+      app: 'Self Attendance',
+      version: '2.0',
+      developer: 'Aashish Giri',
+      userEmail: gUser.email,
+      backupDate: new Date().toISOString(),
+      db: JSON.stringify(D),       // stringify to avoid Firestore map size limits
+      settings: JSON.stringify(S),
+      summary: { totalSubjects, totalRecords },
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    // Use email as doc ID so each user has own backup
+    const docId = gUser.email.replace(/[^a-zA-Z0-9]/g,'_');
+    await fbDb.collection('sa_backups').doc(docId).set(payload);
+    const now = new Date().toLocaleString('en-IN');
+    localStorage.setItem('sa_gLastBk', now);
+    statusEl.textContent = 'Backed up at ' + now;
+    statusEl.className = 'sync-status';
+    toast('Google backup saved!');
+  } catch(e){
+    statusEl.textContent = 'Backup failed: ' + e.message;
+    statusEl.className = 'sync-status error';
+    toast('Backup failed: ' + e.message);
+  }
+}
+
+// ── Google Restore — load from Firestore ──
+async function doGoogleRestore(){
+  if(!gUser){ toast('Sign in first'); return; }
+  if(!await confirm2('Restore from Google?','This will replace all current data with your Google backup.',true)) return;
+  const statusEl = document.getElementById('gSyncStatus');
+  statusEl.textContent = 'Fetching backup...';
+  statusEl.className = 'sync-status syncing';
+  try{
+    const docId = gUser.email.replace(/[^a-zA-Z0-9]/g,'_');
+    const snap = await fbDb.collection('sa_backups').doc(docId).get();
+    if(!snap.exists){
+      statusEl.textContent = 'No Google backup found';
+      statusEl.className = 'sync-status error';
+      toast('No backup found on Google');
+      return;
+    }
+    const data = snap.data();
+    D = JSON.parse(data.db);
+    S = Object.assign({dark:false,targetPct:75,showOT:false,weeklyOff:0,weeklyOffHistory:{}}, JSON.parse(data.settings));
+    save();
+    applyTheme(); applyS();
+    renderHome(); renderByDate(); renderReports();
+    statusEl.textContent = 'Restored from ' + new Date(data.backupDate).toLocaleString('en-IN');
+    statusEl.className = 'sync-status';
+    toast('Google restore complete!');
+  } catch(e){
+    statusEl.textContent = 'Restore failed: ' + e.message;
+    statusEl.className = 'sync-status error';
+    toast('Restore failed: ' + e.message);
+  }
+}
 
 // START
 init();
