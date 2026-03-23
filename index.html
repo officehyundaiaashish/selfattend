@@ -54,17 +54,48 @@ if(typeof window==='undefined'){
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect width='48' height='48' rx='12' fill='%231a6b5a'/><rect x='12' y='8' width='24' height='4' rx='2' fill='white' opacity='.6'/><rect x='10' y='16' width='28' height='22' rx='4' fill='white'/><rect x='14' y='20' width='4' height='4' rx='1' fill='%231a6b5a'/><rect x='14' y='26' width='4' height='4' rx='1' fill='%231a6b5a'/><rect x='20' y='20' width='14' height='2' rx='1' fill='%231a6b5a' opacity='.4'/><rect x='20' y='24' width='10' height='2' rx='1' fill='%231a6b5a' opacity='.4'/><rect x='20' y='28' width='12' height='2' rx='1' fill='%231a6b5a' opacity='.4'/></svg>">
 <link rel="manifest" id="pwaManifest">
 <title>Self Attendance</title>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+<script>
+// ── Firebase Loader — 3-CDN fallback (gstatic → unpkg → jsdelivr) ──
+function _loadScript(src){
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src=src; s.onload=res;
+    s.onerror=()=>{ s.remove(); rej(); };
+    document.head.appendChild(s);
+  });
+}
+function _loadWithFallback(urls){
+  return urls.reduce((p,url)=>p.catch(()=>_loadScript(url)), Promise.reject());
+}
+const _FB_VER='10.12.0';
+const _FB_CDNS=[
+  ['https://www.gstatic.com/firebasejs/'+_FB_VER+'/firebase-app-compat.js',
+   'https://unpkg.com/firebase@'+_FB_VER+'/firebase-app-compat.js',
+   'https://cdn.jsdelivr.net/npm/firebase@'+_FB_VER+'/firebase-app-compat.js'],
+  ['https://www.gstatic.com/firebasejs/'+_FB_VER+'/firebase-auth-compat.js',
+   'https://unpkg.com/firebase@'+_FB_VER+'/firebase-auth-compat.js',
+   'https://cdn.jsdelivr.net/npm/firebase@'+_FB_VER+'/firebase-auth-compat.js'],
+  ['https://www.gstatic.com/firebasejs/'+_FB_VER+'/firebase-firestore-compat.js',
+   'https://unpkg.com/firebase@'+_FB_VER+'/firebase-firestore-compat.js',
+   'https://cdn.jsdelivr.net/npm/firebase@'+_FB_VER+'/firebase-firestore-compat.js']
+];
+window._fbReady = _loadWithFallback(_FB_CDNS[0])
+  .then(()=>_loadWithFallback(_FB_CDNS[1]))
+  .then(()=>_loadWithFallback(_FB_CDNS[2]))
+  .then(()=>true)
+  .catch(()=>false);
+</script>
 <style>
 :root{--primary:#1a6b5a;--primary-light:#25917a;--primary-dark:#0f4a3e;--primary-container:#c8f0e8;--on-primary:#fff;--secondary:#4caf91;--accent:#ff8a65;--surface:#f5faf8;--surface2:#eaf4f0;--card:#fff;--card2:#f0faf6;--text:#0d2b24;--text2:#4a7368;--text3:#7a9e96;--border:#d0e8e2;--present-bg:#e8f5e9;--present:#2e7d32;--absent-bg:#ffebee;--absent:#c62828;--holiday-bg:#e3f2fd;--holiday:#1565c0;--leave-bg:#fff3e0;--leave:#e65100;--halfday-bg:#f3e5f5;--halfday:#6a1b9a;--ot-bg:#e8eaf6;--ot:#283593;--radius:16px;--radius-sm:10px;--radius-lg:24px;--shadow:0 2px 12px rgba(26,107,90,0.10);--shadow-md:0 4px 24px rgba(26,107,90,0.15);--shadow-lg:0 8px 40px rgba(26,107,90,0.18);--transition:0.25s cubic-bezier(0.4,0,0.2,1);}
 [data-theme="dark"]{--primary:#4db89e;--primary-light:#6dceb7;--primary-dark:#2a9e84;--primary-container:#0f3d34;--on-primary:#001a14;--surface:#0d1f1b;--surface2:#142920;--card:#1a2e28;--card2:#1e3530;--text:#d0ede6;--text2:#8ebdb4;--text3:#5a8a80;--border:#2a4038;--present-bg:#1a3320;--present:#66bb6a;--absent-bg:#2d1515;--absent:#ef5350;--holiday-bg:#0d1e2d;--holiday:#42a5f5;--leave-bg:#2d1a08;--leave:#ffa726;--halfday-bg:#1e0f2d;--halfday:#ce93d8;--ot-bg:#0f1228;--ot:#7986cb;--shadow:0 2px 12px rgba(0,0,0,.30);--shadow-md:0 4px 24px rgba(0,0,0,.40);--shadow-lg:0 8px 40px rgba(0,0,0,.50);}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-touch-callout:none;}
+/* Allow text selection only in inputs/textareas */
+input,textarea{-webkit-user-select:text;user-select:text;}
 html,body{height:100%;height:100dvh;background:var(--primary);color:var(--text);font-family:'Nunito',sans-serif;overflow:hidden;position:fixed;width:100%;left:0;top:0;overscroll-behavior:none;touch-action:manipulation;}
-::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+::-webkit-scrollbar{width:0;height:0;display:none;}
+*{scrollbar-width:none;}
 #app{width:100%;max-width:480px;height:100vh;height:100dvh;margin:0 auto;display:flex;flex-direction:column;position:relative;overflow:hidden;background:var(--primary);overscroll-behavior:none;}
 .topbar{background:var(--primary);color:#fff;padding:0 8px;padding-top:env(safe-area-inset-top,0px);display:flex;align-items:center;gap:4px;min-height:56px;height:calc(56px + env(safe-area-inset-top,0px));position:relative;z-index:10;flex-shrink:0;}
 .topbar-title{flex:1;font-size:20px;font-weight:800;font-family:'Space Grotesk',sans-serif;letter-spacing:-.3px;padding:0 4px;}
@@ -169,6 +200,7 @@ select:-webkit-autofill {
 .s-HD{color:var(--halfday);}.s-HD .s-icon{background:var(--halfday-bg);}
 .s-POT,.s-AOT{color:var(--ot);}.s-POT .s-icon,.s-AOT .s-icon{background:var(--ot-bg);}
 .s-clear{color:var(--text2);}.s-clear .s-icon{background:var(--surface2);}
+.s-clear.selected{border-color:var(--text2);background:var(--surface2);}
 .note-input-wrap{padding:0 16px 8px;}
 .note-input-wrap textarea{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-family:'Nunito',sans-serif;font-size:14px;background:var(--surface2);color:var(--text);resize:none;outline:none;transition:border-color var(--transition);}
 .note-input-wrap textarea:focus{border-color:var(--primary);}
@@ -430,7 +462,7 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-i
           <div class="settings-group-label">About</div>
           <div class="settings-item" onclick="openAbout()">
             <div class="settings-icon" style="background:var(--primary-container)"><span class="material-icons-round" style="color:var(--primary)">info</span></div>
-            <div class="settings-text"><div class="settings-label">About App</div><div class="settings-value">Version 2.0.0</div></div>
+            <div class="settings-text"><div class="settings-label">About App</div><div class="settings-value">Version 1.0.0</div></div>
             <span class="material-icons-round" style="color:var(--text3)">chevron_right</span>
           </div>
         </div>
@@ -550,16 +582,15 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-i
     </div>
   </div>
 
-  <!-- ABOUT PAGE (full page) -->
   <div class="full-page" id="aboutPage">
     <div class="topbar" style="background:var(--primary)">
       <button class="icon-btn" onclick="closeFull('aboutPage')"><span class="material-icons-round">arrow_back</span></button>
       <div class="topbar-title">About</div>
     </div>
-  <div style="overflow-y:auto;flex:1">
+  <div style="overflow-y:auto;flex:1;overflow-x:hidden;">
     <div class="about-header">
-      <div class="about-logo">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
+      <div class="about-logo" id="aboutLogoWrap">
+        <!-- Filled by JS with canvas icon -->
       </div>
       <div class="about-appname">Self Attendance</div>
       <div style="font-size:13px;opacity:.75;margin-top:6px;font-weight:500">Track your daily attendance, effortlessly.</div>
@@ -568,29 +599,22 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-i
     <!-- Features -->
     <div style="background:var(--card);margin:16px 12px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">
       <div style="padding:14px 16px 8px;font-size:11px;font-weight:800;color:var(--primary);letter-spacing:.8px;text-transform:uppercase">Features</div>
-      <div class="about-item"><span class="material-icons-round" style="color:var(--primary)">check_circle</span><div><div style="font-weight:700">Attendance Tracking</div><div style="font-size:13px;color:var(--text2)">Mark Present, Absent, Leave, Holiday & more</div></div></div>
-      <div class="about-item"><span class="material-icons-round" style="color:#2e7d32">bar_chart</span><div><div style="font-weight:700">Reports & Analytics</div><div style="font-size:13px;color:var(--text2)">Monthly stats, CSV export & sharing</div></div></div>
+      <div class="about-item"><span class="material-icons-round" style="color:var(--primary)">check_circle</span><div><div style="font-weight:700">Attendance Tracking</div><div style="font-size:13px;color:var(--text2)">Mark Present, Absent, Leave, Holiday &amp; more</div></div></div>
+      <div class="about-item"><span class="material-icons-round" style="color:#2e7d32">bar_chart</span><div><div style="font-weight:700">Reports &amp; Analytics</div><div style="font-size:13px;color:var(--text2)">Monthly stats, CSV export &amp; sharing</div></div></div>
       <div class="about-item"><span class="material-icons-round" style="color:#1565c0">cloud_done</span><div><div style="font-weight:700">Google Backup</div><div style="font-size:13px;color:var(--text2)">Sync your data securely to the cloud</div></div></div>
-      <div class="about-item"><span class="material-icons-round" style="color:#6a1b9a">dark_mode</span><div><div style="font-weight:700">Dark Mode</div><div style="font-size:13px;color:var(--text2)">Easy on the eyes, day or night</div></div></div>
-      <div class="about-item" style="border-bottom:none"><span class="material-icons-round" style="color:#e65100">offline_bolt</span><div><div style="font-weight:700">Works Offline</div><div style="font-size:13px;color:var(--text2)">Install as PWA — no internet needed</div></div></div>
+      <div class="about-item" style="border-bottom:none"><span class="material-icons-round" style="color:#6a1b9a">dark_mode</span><div><div style="font-weight:700">Dark Mode</div><div style="font-size:13px;color:var(--text2)">Easy on the eyes, day or night</div></div></div>
     </div>
 
     <!-- Developer -->
-    <div style="background:var(--card);margin:12px 12px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">
+    <div style="background:var(--card);margin:12px 12px 32px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">
       <div style="padding:14px 16px 8px;font-size:11px;font-weight:800;color:var(--primary);letter-spacing:.8px;text-transform:uppercase">Developer</div>
       <div style="display:flex;align-items:center;gap:14px;padding:12px 16px 16px">
         <div style="width:44px;height:44px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;font-family:'Space Grotesk',sans-serif;flex-shrink:0">A</div>
         <div>
           <div style="font-size:15px;font-weight:800;color:var(--text)">Aashish Giri</div>
-          <div style="font-size:13px;color:var(--text2);margin-top:2px">Built with ❤️ for personal use</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:2px;display:flex;align-items:center;gap:5px">Built with <svg width="14" height="14" viewBox="0 0 24 24" fill="#e53935" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> for personal use</div>
         </div>
       </div>
-    </div>
-
-    <!-- Storage notice -->
-    <div style="margin:12px 12px 32px;padding:12px 14px;border-radius:var(--radius-sm);background:var(--primary-container);display:flex;align-items:center;gap:10px">
-      <span class="material-icons-round" style="color:var(--primary);font-size:20px">storage</span>
-      <span style="font-size:13px;font-weight:600;color:var(--primary)">All data stored locally on your device</span>
     </div>
   </div>
 </div><!-- end aboutPage -->
@@ -760,7 +784,7 @@ function save(){
     const payload={
       db: D,
       settings: S,
-      meta: {savedAt:new Date().toISOString(), version:'2.0', developer:'Aashish Giri'}
+      meta: {savedAt:new Date().toISOString(), version:'1.0', developer:'Aashish Giri'}
     };
     const str = JSON.stringify(payload);
     localStorage.setItem('sa_app', str);
@@ -1262,8 +1286,7 @@ function sdMenu(){
   const btn=document.querySelector('#sdPage .topbar button:last-child');
   ctxMenu(btn,[
     {i:'edit',l:'Edit Subject',fn:()=>editSub(curSub)},
-    {i:'delete_sweep',l:'Clear Attendance',fn:()=>clearSubAtt(curSub)},
-    {i:'delete',l:'Delete Subject',d:true,fn:()=>{closeSD();setTimeout(()=>delSub(curSub),300);}}
+    {i:'delete_sweep',l:'Clear Attendance',fn:()=>clearSubAtt(curSub)}
   ]);
 }
 
@@ -1474,7 +1497,7 @@ function doBackup(){
 
   const bk={
     app:'Self Attendance',
-    version:'2.0',
+    version:'1.0',
     developer:'Aashish Giri',
     backupDate:new Date().toISOString(),
     backupDateReadable:new Date().toLocaleString('en-IN'),
@@ -1627,31 +1650,34 @@ function pad(n){return String(n).padStart(2,'0');}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 async function dlFile(name, content, mime){
   const blob = new Blob([content], {type: mime});
-  // Try modern File System Access API — shows native Save dialog
-  if(window.showSaveFilePicker){
+  // Detect Capacitor WebView — showSaveFilePicker not available there
+  const isCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  if(!isCapacitor && window.showSaveFilePicker){
     try{
       const ext = name.split('.').pop();
-      const types = [{
-        description: ext.toUpperCase() + ' File',
-        accept: {[mime]: ['.'+ext]}
-      }];
-      const fh = await window.showSaveFilePicker({suggestedName: name, types});
+      const fh = await window.showSaveFilePicker({
+        suggestedName: name,
+        types: [{description: ext.toUpperCase()+' File', accept: {[mime]: ['.'+ext]}}]
+      });
       const writable = await fh.createWritable();
       await writable.write(blob);
       await writable.close();
-      toast('File saved to device!');
+      toast('File saved!');
       return;
     } catch(e){
-      if(e.name === 'AbortError') return; // user cancelled
-      // fall through to download
+      if(e.name === 'AbortError') return;
+      // fall through to standard download
     }
   }
-  // Fallback — standard download (saves to Downloads folder)
+  // Standard download — works everywhere (browser Downloads + Capacitor)
   const u = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = u; a.download = name; a.click();
-  URL.revokeObjectURL(u);
-  toast('Saved to Downloads folder');
+  a.href = u; a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(u), 1000);
+  toast('Saved to Downloads');
 }
 function clip(t){
   navigator.clipboard.writeText(t).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');document.body.removeChild(a);});
@@ -1844,13 +1870,13 @@ function showShortcutsHint(){
     'P/A/H/L — Mark attendance',
     'Enter — Confirm',
   ];
-  toast('⌨ Shortcuts: '+hints[Math.floor(Math.random()*hints.length)]);
+  toast('Shortcuts: '+hints[Math.floor(Math.random()*hints.length)]);
 }
 // Desktop pe ? key se shortcuts hint
 document.addEventListener('keydown',e=>{
   if(e.key==='?'&&!document.activeElement.matches('input,textarea')){
     e.preventDefault();
-    toast('⌨ Keys: 1-4=Tabs | /=Search | N=New | ←→=Navigate | P/A/H/L=Status | ESC=Back');
+    toast('Keys: 1-4=Tabs | /=Search | N=New | Left/Right=Navigate | P/A/H/L=Status | ESC=Back');
   }
 });
 
@@ -2037,7 +2063,7 @@ self.addEventListener('fetch',e=>{
   }
 }
 
-// ── Install prompt ──
+// ── Install prompt (browser only — Capacitor WebView never fires these) ──
 let _deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
@@ -2052,7 +2078,7 @@ window.addEventListener('appinstalled', () => {
 
 // ── Init PWA ──
 generateManifest();
-registerSW();
+registerSW(); // no-op in Capacitor (skips non-http origins), works fine in browser
 
 
 // ── NUCLEAR: Block Google payment/password manager on ALL inputs ──
@@ -2069,17 +2095,16 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }, true);
   
-  // Periodically remove any injected autofill elements (Google Pay etc)
+  // Periodically remove payment/autofill overlays — NOT accounts.google (Firebase Auth needs that)
   function killAutofill(){
-    // Kill Google's payment/autofill suggestion overlays
     ['#credential_picker_container','#password-manager-button',
-     'iframe[src*="accounts.google"]','iframe[src*="payments.google"]',
+     'iframe[src*="payments.google"]',
      'iframe[src*="autofill"]','[data-credential-handler]'
     ].forEach(sel=>{
       document.querySelectorAll(sel).forEach(el=>el.remove());
     });
   }
-  setInterval(killAutofill, 800);
+  setInterval(killAutofill, 2000);
   
   // MutationObserver to kill autofill iframes as soon as Chrome injects them
   const observer = new MutationObserver(mutations=>{
@@ -2088,11 +2113,15 @@ document.addEventListener('DOMContentLoaded', function(){
         if(n.nodeType===1){
           const tag = n.tagName||'';
           const src = n.src||n.getAttribute?.('src')||'';
-          if(tag==='IFRAME' && (src.includes('google')||src.includes('autofill')||src.includes('payment'))){
-            n.remove();
-          }
-          // Also check for credential picker divs
-          if(tag==='DIV' && n.id && n.id.includes('credential')){
+          // Kill ONLY payment/autofill iframes — NOT accounts.google (Firebase Auth uses that)
+          const isPaymentIframe = tag==='IFRAME' && (
+            src.includes('payments.google') ||
+            src.includes('autofill') ||
+            src.includes('payment')
+          );
+          if(isPaymentIframe){ n.remove(); }
+          // Kill credential picker divs (NOT auth popups)
+          if(tag==='DIV' && n.id && (n.id.includes('credential_picker') || n.id.includes('password-manager'))){
             n.remove();
           }
         }
@@ -2105,49 +2134,56 @@ document.addEventListener('DOMContentLoaded', function(){
 
 // ═══════════════════════════════════════════════════════
 // FIREBASE — Google Auth + Firestore Backup
-// Project: Aashish Giri's existing Firestore project
 // ═══════════════════════════════════════════════════════
 const FB_CONFIG = (()=>{
-  // Config is obfuscated — Firestore security rules enforce access control
   const _a = ['AIzaSyApVZ0wN8eIZKO9ys7CkpVHwBZ1P7q6ztE','officedesk-6c56e.firebaseapp.com','officedesk-6c56e','officedesk-6c56e.firebasestorage.app','342843064222','1:342843064222:web:b4e81090796664bf39608f'];
   return {apiKey:_a[0],authDomain:_a[1],projectId:_a[2],storageBucket:_a[3],messagingSenderId:_a[4],appId:_a[5]};
 })();
 
-// Initialize Firebase (only once)
-let fbApp, fbAuth, fbDb;
-try {
-  fbApp = firebase.app();
-} catch(e) {
-  fbApp = firebase.initializeApp(FB_CONFIG);
-}
-fbAuth = firebase.auth();
-fbDb   = firebase.firestore();
+let fbApp=null, fbAuth=null, fbDb=null, gUser=null;
 
-// Access control is handled by Firestore security rules — no email list needed here
-let gUser = null;
-try { fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{}); } catch(e){}
-
-fbAuth.onAuthStateChanged(user => {
-  if(user){
-    gUser = user;
-    localStorage.setItem('sa_guser', JSON.stringify({
-      email: user.email,
-      name: user.displayName,
-      photo: user.photoURL
-    }));
-    updateAuthUI(user);
-  } else {
-    gUser = null;
-    // Try to restore from localStorage (for display only)
+// Wait for dynamic Firebase scripts to finish loading, then init
+(window._fbReady || Promise.resolve(false)).then(loaded => {
+  if(!loaded || typeof firebase === 'undefined'){
+    // Firebase unavailable — show cached user info for display only
     const cached = localStorage.getItem('sa_guser');
-    if(cached){
-      const cu = JSON.parse(cached);
-      // Show cached but mark as needing re-auth
-      updateAuthUICached(cu);
-    } else {
-      updateAuthUI(null);
-    }
+    if(cached){ try{ updateAuthUICached(JSON.parse(cached)); }catch(e){ updateAuthUI(null); } }
+    else { updateAuthUI(null); }
+    return;
   }
+
+  // Init Firebase (guard against double-init)
+  try {
+    fbApp = firebase.app();
+  } catch(e) {
+    try { fbApp = firebase.initializeApp(FB_CONFIG); } catch(e2){}
+  }
+  try {
+    fbAuth = firebase.auth();
+    fbDb   = firebase.firestore();
+  } catch(e){ updateAuthUI(null); return; }
+
+  try { fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{}); } catch(e){}
+
+  fbAuth.onAuthStateChanged(user => {
+    if(user){
+      gUser = user;
+      localStorage.setItem('sa_guser', JSON.stringify({
+        email: user.email,
+        name: user.displayName,
+        photo: user.photoURL
+      }));
+      updateAuthUI(user);
+    } else {
+      gUser = null;
+      const cached = localStorage.getItem('sa_guser');
+      if(cached){
+        try{ updateAuthUICached(JSON.parse(cached)); }catch(e){ updateAuthUI(null); }
+      } else {
+        updateAuthUI(null);
+      }
+    }
+  });
 });
 
 function updateAuthUI(user){
@@ -2215,6 +2251,7 @@ function updateAuthUICached(cu){
 }
 
 async function gSignIn(){
+  if(!fbAuth){ toast('Google sign-in unavailable — check internet connection'); return; }
   try{
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({prompt:'select_account'});
@@ -2229,7 +2266,7 @@ async function gSignIn(){
 async function gSignOut(){
   if(!await confirm2('Sign Out?', 'You will be signed out of Google. Local data stays safe.',false)) return;
   localStorage.removeItem('sa_guser');
-  await fbAuth.signOut();
+  if(fbAuth){ try{ await fbAuth.signOut(); }catch(e){} }
   gUser = null;
   updateAuthUI(null);
   toast('Signed out');
@@ -2238,6 +2275,7 @@ async function gSignOut(){
 // ── Google Backup — save to Firestore ──
 async function doGoogleBackup(){
   if(!gUser){ toast('Sign in first'); return; }
+  if(!fbDb){ toast('Firebase unavailable — check internet'); return; }
   const statusEl = document.getElementById('gSyncStatus');
   statusEl.textContent = 'Backing up...';
   statusEl.className = 'sync-status syncing';
@@ -2247,7 +2285,7 @@ async function doGoogleBackup(){
     D.subjects.forEach(s=>{ totalRecords += (D.attendance[s.id]||[]).length; });
     const payload = {
       app: 'Self Attendance',
-      version: '2.0',
+      version: '1.0',
       developer: 'Aashish Giri',
       userEmail: gUser.email,
       backupDate: new Date().toISOString(),
@@ -2274,6 +2312,7 @@ async function doGoogleBackup(){
 // ── Google Restore — load from Firestore ──
 async function doGoogleRestore(){
   if(!gUser){ toast('Sign in first'); return; }
+  if(!fbDb){ toast('Firebase unavailable — check internet'); return; }
   if(!await confirm2('Restore from Google?','This will replace all current data with your Google backup.',true)) return;
   const statusEl = document.getElementById('gSyncStatus');
   statusEl.textContent = 'Fetching backup...';
@@ -2305,6 +2344,17 @@ async function doGoogleRestore(){
 
 // START
 init();
+// Inject canvas-generated logo into about page
+(function(){
+  const wrap = document.getElementById('aboutLogoWrap');
+  if(wrap){
+    const img = document.createElement('img');
+    img.src = makeIconPng(96);
+    img.width = 72; img.height = 72;
+    img.style.cssText = 'border-radius:20px;display:block;';
+    wrap.appendChild(img);
+  }
+})();
 // FAB entrance
 setTimeout(()=>{
   const f=document.getElementById('mainFab');
