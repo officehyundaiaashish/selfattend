@@ -58,9 +58,6 @@ if(typeof window==='undefined'){
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 <style>
 :root{--primary:#1a6b5a;--primary-light:#25917a;--primary-dark:#0f4a3e;--primary-container:#c8f0e8;--on-primary:#fff;--secondary:#4caf91;--accent:#ff8a65;--surface:#f5faf8;--surface2:#eaf4f0;--card:#fff;--card2:#f0faf6;--text:#0d2b24;--text2:#4a7368;--text3:#7a9e96;--border:#d0e8e2;--present-bg:#e8f5e9;--present:#2e7d32;--absent-bg:#ffebee;--absent:#c62828;--holiday-bg:#e3f2fd;--holiday:#1565c0;--leave-bg:#fff3e0;--leave:#e65100;--halfday-bg:#f3e5f5;--halfday:#6a1b9a;--ot-bg:#e8eaf6;--ot:#283593;--radius:16px;--radius-sm:10px;--radius-lg:24px;--shadow:0 2px 12px rgba(26,107,90,0.10);--shadow-md:0 4px 24px rgba(26,107,90,0.15);--shadow-lg:0 8px 40px rgba(26,107,90,0.18);--transition:0.25s cubic-bezier(0.4,0,0.2,1);}
@@ -298,6 +295,33 @@ select:-webkit-autofill {
 
 .full-page{display:none;position:absolute;inset:0;z-index:80;background:var(--surface);flex-direction:column;overflow:hidden;will-change:transform,opacity;}
 .alert-banner{margin:0 12px;padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;}
+
+/* ── Custom Select Styling ── */
+select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%234a7368' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px !important;cursor:pointer;}
+
+/* ── User Popup Sheet ── */
+.user-sheet-overlay{position:absolute;inset:0;z-index:250;display:none;align-items:flex-start;justify-content:flex-end;padding:56px 8px 0;}
+.user-sheet-overlay.open{display:flex;}
+.user-popup{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);border:1px solid var(--border);width:240px;overflow:hidden;animation:dropDown .2s cubic-bezier(.2,.8,.4,1) both;}
+.user-popup-header{background:var(--primary);padding:16px;color:#fff;}
+.user-popup-name{font-size:15px;font-weight:800;font-family:'Space Grotesk',sans-serif;}
+.user-popup-email{font-size:12px;opacity:.8;margin-top:2px;}
+.user-popup-item{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text);border:none;background:transparent;width:100%;transition:background .12s;}
+.user-popup-item:active{background:var(--surface2);}
+.user-popup-item.danger{color:var(--absent);}
+.user-popup-divider{height:1px;background:var(--border);}
+
+/* ── Report Month Nav ── */
+.rpt-month-nav{display:flex;align-items:center;gap:0;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.rpt-month-nav-btn{width:36px;height:36px;border:none;background:transparent;cursor:pointer;color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;transition:background .12s;flex-shrink:0;}
+.rpt-month-nav-btn:active{background:var(--primary-container);}
+.rpt-month-label-inner{flex:1;text-align:center;font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;padding:0 2px;}
+
+/* ── Target picker sheet ── */
+.target-input-wrap{padding:0 16px 16px;}
+.target-input-wrap input[type=range]{width:100%;accent-color:var(--primary);height:6px;border-radius:3px;outline:none;-webkit-appearance:none;appearance:none;background:var(--border);cursor:pointer;}
+.target-input-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--primary);cursor:pointer;box-shadow:0 2px 8px rgba(26,107,90,.3);}
+.target-val-display{text-align:center;font-size:32px;font-weight:900;color:var(--primary);font-family:'Space Grotesk',sans-serif;padding:8px 0 4px;}
 </style>
 </head>
 <body>
@@ -306,8 +330,9 @@ select:-webkit-autofill {
     <div style="display:flex;align-items:center;flex:1;gap:4px;">
       <span class="topbar-title" id="topbarTitle">Self Attendance</span>
     </div>
-    <div style="display:flex;gap:2px;" id="topbarRight">
+    <div style="display:flex;gap:2px;align-items:center;" id="topbarRight">
       <button class="icon-btn" onclick="showSearch()" id="btnSearch"><span class="material-icons-round">search</span></button>
+      <div id="mainTopbarAvatar"></div>
       <button class="icon-btn" onclick="showMenu()" id="btnMenu"><span class="material-icons-round">more_vert</span></button>
     </div>
   </div>
@@ -352,9 +377,13 @@ select:-webkit-autofill {
     <!-- REPORTS -->
     <div class="page" id="page-reports">
       <div style="padding:12px 0 80px">
-        <div class="chip-row" id="rptChips">
-          <button class="filter-chip active" onclick="filterReport('all',this)">All Subjects</button>
-          <button class="filter-chip" onclick="showMonthPicker()"><span id="rptMonthLabel">This Month</span></button>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px 8px;">
+          <button class="filter-chip active" onclick="filterReport('all',this)" style="flex-shrink:0">All Subjects</button>
+          <div class="rpt-month-nav" style="flex:1">
+            <button class="rpt-month-nav-btn" onclick="navReport(-1)">&#8249;</button>
+            <span class="rpt-month-label-inner" id="rptMonthLabel">This Month</span>
+            <button class="rpt-month-nav-btn" onclick="navReport(1)">&#8250;</button>
+          </div>
         </div>
         <div id="rptList"></div>
       </div>
@@ -493,31 +522,29 @@ select:-webkit-autofill {
         <div style="flex:1;height:1px;background:var(--border)"></div>
       </div>
 
-      <!-- Data summary -->
-      <div id="backupSummary" style="background:var(--card);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.9;border:1px solid var(--border)"></div>
-
-      <!-- Local backup + restore in one card -->
+      <!-- Local backup card — Google card style -->
       <div style="background:var(--card);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border)">
-        <button onclick="doBackup()" style="display:flex;align-items:center;gap:14px;padding:16px;width:100%;background:transparent;border:none;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s">
-          <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:#e8f5e9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <span class="material-icons-round" style="color:#2e7d32;font-size:22px">save_alt</span>
+        <!-- Info row -->
+        <div style="display:flex;align-items:center;gap:14px;padding:16px">
+          <div style="width:44px;height:44px;border-radius:50%;background:#e8f5e9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span class="material-icons-round" style="color:#2e7d32;font-size:22px">folder_zip</span>
           </div>
-          <div style="flex:1;text-align:left">
-            <div style="font-size:15px;font-weight:700;color:var(--text)">Save backup file</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:15px;font-weight:700;color:var(--text)">Device Backup</div>
             <div style="font-size:12px;color:var(--text2);margin-top:1px" id="lastBackupLbl">No backup taken yet</div>
           </div>
-          <span class="material-icons-round" style="color:var(--text3)">chevron_right</span>
-        </button>
-        <button onclick="document.getElementById('fileIn').click()" style="display:flex;align-items:center;gap:14px;padding:16px;width:100%;background:transparent;border:none;cursor:pointer;transition:background .15s">
-          <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:#e3f2fd;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <span class="material-icons-round" style="color:#1565c0;font-size:22px">upload_file</span>
-          </div>
-          <div style="flex:1;text-align:left">
-            <div style="font-size:15px;font-weight:700;color:var(--text)">Restore from file</div>
-            <div style="font-size:12px;color:var(--text2);margin-top:1px">Choose a .json backup file</div>
-          </div>
-          <span class="material-icons-round" style="color:var(--text3)">chevron_right</span>
-        </button>
+        </div>
+        <!-- Action buttons -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border)">
+          <button onclick="doBackup()" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;background:transparent;border:none;cursor:pointer;border-right:1px solid var(--border);transition:background .15s">
+            <span class="material-icons-round" style="font-size:26px;color:#2e7d32">save_alt</span>
+            <span style="font-size:13px;font-weight:700;color:var(--text)">Save backup</span>
+          </button>
+          <button onclick="document.getElementById('fileIn').click()" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;background:transparent;border:none;cursor:pointer;transition:background .15s">
+            <span class="material-icons-round" style="font-size:26px;color:#1565c0">upload_file</span>
+            <span style="font-size:13px;font-weight:700;color:var(--text)">Restore</span>
+          </button>
+        </div>
       </div>
 
     </div>
@@ -531,17 +558,40 @@ select:-webkit-autofill {
     </div>
   <div style="overflow-y:auto;flex:1">
     <div class="about-header">
-      <div class="about-logo"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg></div>
+      <div class="about-logo">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
+      </div>
       <div class="about-appname">Self Attendance</div>
-      <div style="font-size:13px;opacity:.8;margin-top:4px">Version 2.0.0 • Web Edition</div>
+      <div style="font-size:13px;opacity:.75;margin-top:6px;font-weight:500">Track your daily attendance, effortlessly.</div>
     </div>
-    <div style="background:var(--card);margin:12px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">
-      <div class="about-item"><span class="material-icons-round" style="color:var(--primary)">check_circle</span><div><div style="font-weight:700">Track Attendance</div><div style="font-size:13px;color:var(--text2)">Mark P/A/Leave/Holiday for any subject</div></div></div>
-      <div class="about-item"><span class="material-icons-round" style="color:#2e7d32">bar_chart</span><div><div style="font-weight:700">Reports & Analytics</div><div style="font-size:13px;color:var(--text2)">CSV exports & sharing</div></div></div>
-      <div class="about-item"><span class="material-icons-round" style="color:#1565c0">backup</span><div><div style="font-weight:700">Local Backup</div><div style="font-size:13px;color:var(--text2)">Save & restore data anytime</div></div></div>
-      <div class="about-item"><span class="material-icons-round" style="color:#6a1b9a">dark_mode</span><div><div style="font-weight:700">Dark Mode</div><div style="font-size:13px;color:var(--text2)">Eye-friendly dark theme</div></div></div>
+
+    <!-- Features -->
+    <div style="background:var(--card);margin:16px 12px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">
+      <div style="padding:14px 16px 8px;font-size:11px;font-weight:800;color:var(--primary);letter-spacing:.8px;text-transform:uppercase">Features</div>
+      <div class="about-item"><span class="material-icons-round" style="color:var(--primary)">check_circle</span><div><div style="font-weight:700">Attendance Tracking</div><div style="font-size:13px;color:var(--text2)">Mark Present, Absent, Leave, Holiday & more</div></div></div>
+      <div class="about-item"><span class="material-icons-round" style="color:#2e7d32">bar_chart</span><div><div style="font-weight:700">Reports & Analytics</div><div style="font-size:13px;color:var(--text2)">Monthly stats, CSV export & sharing</div></div></div>
+      <div class="about-item"><span class="material-icons-round" style="color:#1565c0">cloud_done</span><div><div style="font-weight:700">Google Backup</div><div style="font-size:13px;color:var(--text2)">Sync your data securely to the cloud</div></div></div>
+      <div class="about-item"><span class="material-icons-round" style="color:#6a1b9a">dark_mode</span><div><div style="font-weight:700">Dark Mode</div><div style="font-size:13px;color:var(--text2)">Easy on the eyes, day or night</div></div></div>
+      <div class="about-item" style="border-bottom:none"><span class="material-icons-round" style="color:#e65100">offline_bolt</span><div><div style="font-weight:700">Works Offline</div><div style="font-size:13px;color:var(--text2)">Install as PWA — no internet needed</div></div></div>
     </div>
-    <div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">All data stored locally on your device</div>
+
+    <!-- Developer -->
+    <div style="background:var(--card);margin:12px 12px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">
+      <div style="padding:14px 16px 8px;font-size:11px;font-weight:800;color:var(--primary);letter-spacing:.8px;text-transform:uppercase">Developer</div>
+      <div style="display:flex;align-items:center;gap:14px;padding:12px 16px 16px">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;font-family:'Space Grotesk',sans-serif;flex-shrink:0">A</div>
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--text)">Aashish Giri</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:2px">Built with ❤️ for personal use</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Storage notice -->
+    <div style="margin:12px 12px 32px;padding:12px 14px;border-radius:var(--radius-sm);background:var(--primary-container);display:flex;align-items:center;gap:10px">
+      <span class="material-icons-round" style="color:var(--primary);font-size:20px">storage</span>
+      <span style="font-size:13px;font-weight:600;color:var(--primary)">All data stored locally on your device</span>
+    </div>
   </div>
 </div><!-- end aboutPage -->
 <!-- Mini Date Picker for By Date -->
@@ -635,6 +685,38 @@ select:-webkit-autofill {
 <div class="toast" id="toast"></div>
 <input type="file" id="fileIn" accept=".json" onchange="doRestore(this)" style="display:none" autocomplete="off">
 <input type="date" id="dateIn" style="display:none" onchange="setDate(this.value)" autocomplete="off">
+
+<!-- User popup (avatar click) -->
+<div class="user-sheet-overlay" id="userPopupOverlay" onclick="if(event.target===this)closeUserPopup()">
+  <div class="user-popup" id="userPopup">
+    <div class="user-popup-header">
+      <div class="user-popup-name" id="upName">User</div>
+      <div class="user-popup-email" id="upEmail"></div>
+    </div>
+    <button class="user-popup-item" onclick="closeUserPopup();openBackupPage()">
+      <span class="material-icons-round" style="font-size:18px;color:var(--primary)">backup</span> Backup & Restore
+    </button>
+    <div class="user-popup-divider"></div>
+    <button class="user-popup-item danger" onclick="closeUserPopup();gSignOut()">
+      <span class="material-icons-round" style="font-size:18px">logout</span> Sign out
+    </button>
+  </div>
+</div>
+
+<!-- Target % picker sheet -->
+<div class="overlay" id="targetSheet" onclick="bgClose(this,event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Target Attendance %</div>
+    <div class="target-input-wrap">
+      <div class="target-val-display" id="targetDisplay">75%</div>
+      <input type="range" id="targetRange" min="1" max="100" value="75" oninput="document.getElementById('targetDisplay').textContent=this.value+'%'">
+    </div>
+    <div style="padding:0 16px 16px">
+      <button class="btn-primary" onclick="applyTarget()"><span class="material-icons-round">check</span> Apply</button>
+    </div>
+  </div>
+</div>
 </div><!-- end #app -->
 
 <script>
@@ -827,10 +909,12 @@ function openSub(id){
 }
 function closeSD(){closeFull('sdPage');renderHome();}
 function sdView(v){curView=v;renderSD();}
+let _skipCalAnim=false;
 function renderSD(){
   const s=D.subjects.find(x=>x.id===curSub);if(!s)return;
   document.getElementById('sdBody').innerHTML=curView==='cal'?renderCalView(s):renderListView(s);
-  if(curView==='cal')setTimeout(animateCal,50);
+  if(curView==='cal'&&!_skipCalAnim)setTimeout(animateCal,50);
+  _skipCalAnim=false;
 }
 
 function renderCalView(s){
@@ -907,15 +991,19 @@ function renderListView(s){
 }
 
 function animateCal(){
-  document.querySelectorAll('.cal-day:not(.empty)').forEach((d,i)=>{
+  // Only animate on first open, not on every status mark
+  const days=document.querySelectorAll('.cal-day:not(.empty)');
+  days.forEach((d,i)=>{
     d.style.opacity='0';
-    d.style.transform='scale(0.5)';
+    d.style.transform='scale(0.6)';
     d.style.transition='none';
+    // Batch all frames together for a smooth unified reveal
+    const delay=12+i*7;
     setTimeout(()=>{
-      d.style.transition=`opacity .25s ease, transform .35s cubic-bezier(.34,1.56,.64,1)`;
+      d.style.transition=`opacity .2s ease ${0}ms, transform .22s cubic-bezier(.34,1.3,.64,1) ${0}ms`;
       d.style.opacity='1';
       d.style.transform='scale(1)';
-    }, 20 + i*10);
+    }, delay);
   });
 }
 function chM(dir){sdM+=dir;if(sdM<0){sdM=11;sdY--;}if(sdM>11){sdM=0;sdY++;}renderSD();}
@@ -954,7 +1042,7 @@ function saveAtt(){
   if(!selStatus||selStatus==='X'){if(idx!==-1)D.attendance[id].splice(idx,1);}
   else if(idx!==-1)D.attendance[id][idx]={date,s:selStatus,n};
   else D.attendance[id].push({date,s:selStatus,n});
-  save();closeSheet('markSheet');renderSD();renderByDate();
+  save();closeSheet('markSheet');_skipCalAnim=true;renderSD();renderByDate();
   toast(selStatus?`Marked as ${selStatus}`:'Attendance cleared');
 }
 
@@ -1065,8 +1153,15 @@ function renderReports(){
   }).join('');
 }
 
+function navReport(dir){
+  rptM+=dir;
+  if(rptM<0){rptM=11;rptY--;}
+  if(rptM>11){rptM=0;rptY++;}
+  renderReports();
+}
+
 function filterReport(t,btn){
-  document.querySelectorAll('#rptChips .filter-chip').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('[onclick*="filterReport"]').forEach(c=>c.classList.remove('active'));
   btn.classList.add('active');
 }
 
@@ -1211,19 +1306,26 @@ const SVGICONS={
 
 function ctxMenu(anchorEl,items){
   const m=document.getElementById('ctxMenu');
-  // Build items with SVG icons
   m.innerHTML=items.map((it,i)=>`<button class="ctx-item ${it.d?'danger':''}" onclick="ctxAct(${i})">${SVGICONS[it.i]||''}${it.l}</button>`).join('');
   m._items=items;
 
-  // Calculate position below anchor
+  // Reset to measure natural width
+  m.style.visibility='hidden';m.style.left='0';m.style.top='0';m.style.right='auto';m.style.bottom='auto';
+  m.classList.add('open');
+  const mw=m.offsetWidth||210;
+  m.classList.remove('open');
+
   const appRect=document.getElementById('app').getBoundingClientRect();
+  const appW=appRect.width;
   if(anchorEl){
     const r=anchorEl.getBoundingClientRect();
-    const top=r.bottom-appRect.top+4;
-    // right-align with the button
-    const right=appRect.right-r.right;
+    const top=Math.min(r.bottom-appRect.top+4, appRect.height-items.length*50-12);
+    // Try right-align from anchor; clamp so menu doesn't go left of app
+    let rightPx=appRect.right-r.right;
+    let leftPx=appW-rightPx-mw;
+    if(leftPx<8){rightPx=appW-mw-8;leftPx=8;}
     m.style.top=top+'px';
-    m.style.right=Math.max(right,8)+'px';
+    m.style.right=Math.max(rightPx,8)+'px';
     m.style.left='auto';
     m.style.bottom='auto';
   } else {
@@ -1267,8 +1369,14 @@ function ctxAct(i){
 // =========================================
 function toggleDark(){S.dark=!S.dark;save();applyTheme();}
 function editTarget(){
-  const v=prompt('Target percentage (1-100):',S.targetPct);
-  if(v&&!isNaN(v)&&v>=1&&v<=100){S.targetPct=parseInt(v);save();applyS();renderHome();toast('Target set to '+S.targetPct+'%');}
+  document.getElementById('targetRange').value=S.targetPct;
+  document.getElementById('targetDisplay').textContent=S.targetPct+'%';
+  openSheet('targetSheet');
+}
+function applyTarget(){
+  const v=parseInt(document.getElementById('targetRange').value);
+  if(v>=1&&v<=100){S.targetPct=v;save();applyS();renderHome();toast('Target set to '+v+'%');}
+  closeSheet('targetSheet');
 }
 function toggleOT(){S.showOT=!S.showOT;save();applyS();}
 
@@ -1328,17 +1436,25 @@ function getWeeklyOffForMonth(year, month){
   return S.weeklyOff||0;
 }
 function openAbout(){openFull('aboutPage');}
+
+function showUserPopup(){
+  if(!gUser) return;
+  document.getElementById('upName').textContent = gUser.displayName || gUser.email;
+  document.getElementById('upEmail').textContent = gUser.email;
+  document.getElementById('userPopupOverlay').classList.add('open');
+  // Close on outside click after frame
+  setTimeout(()=>{
+    const handler=(e)=>{ if(!document.getElementById('userPopup').contains(e.target)){closeUserPopup();} };
+    document.addEventListener('click',handler,{once:true});
+    document.addEventListener('touchstart',handler,{once:true,passive:true});
+  },80);
+}
+function closeUserPopup(){
+  document.getElementById('userPopupOverlay').classList.remove('open');
+}
 function openBackupPage(){
   const lbl=localStorage.getItem('sa_lastBk');
   document.getElementById('lastBackupLbl').textContent=lbl?`Last backup: ${lbl}`:'No backup taken yet';
-  let totalRec=0;
-  D.subjects.forEach(s=>{totalRec+=(D.attendance[s.id]||[]).length;});
-  const sum=document.getElementById('backupSummary');
-  if(sum){
-    sum.innerHTML=
-      `<b>${D.subjects.length}</b> Subject(s) &nbsp;|&nbsp; <b>${totalRec}</b> Records<br>`+
-      `Dark: <b>${S.dark?'ON':'OFF'}</b> &nbsp;|&nbsp; Target: <b>${S.targetPct}%</b> &nbsp;|&nbsp; Weekly Off: <b>${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][S.weeklyOff]}</b>`;
-  }
   // Show Google last backup time
   const gLbl = localStorage.getItem('sa_gLastBk');
   const gSync = document.getElementById('gSyncStatus');
@@ -1550,6 +1666,7 @@ function anySheetOpen(){
   return document.getElementById('markSheet').classList.contains('open')||
          document.getElementById('addSheet').classList.contains('open')||
          document.getElementById('mPickSheet').classList.contains('open')||
+         document.getElementById('targetSheet').classList.contains('open')||
          document.getElementById('confirmDlg').classList.contains('open');
 }
 function anyFullPageOpen(){
@@ -1567,7 +1684,7 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();
     if(document.getElementById('confirmDlg').classList.contains('open')){cfResolve(false);return;}
     if(anySheetOpen()){
-      closeSheet('markSheet');closeSheet('addSheet');closeSheet('mPickSheet');return;
+      closeSheet('markSheet');closeSheet('addSheet');closeSheet('mPickSheet');closeSheet('targetSheet');return;
     }
     if(document.getElementById('ctxMenu').classList.contains('open')){closeCtxMenu();return;}
     if(document.getElementById('sdPage').style.display==='flex'){closeSD();return;}
@@ -1642,7 +1759,7 @@ let _backPressedOnce=false,_backTimer=null;
 window.addEventListener('popstate',()=>{
   if(document.getElementById('confirmDlg').classList.contains('open')){cfResolve(false);history.pushState(null,'',location.href);return;}
   if(anySheetOpen()){
-    closeSheet('markSheet');closeSheet('addSheet');closeSheet('mPickSheet');
+    closeSheet('markSheet');closeSheet('addSheet');closeSheet('mPickSheet');closeSheet('targetSheet');
     const wo=document.getElementById('weeklyOffSheet');
     if(wo)closeSheet('weeklyOffSheet');
     history.pushState(null,'',location.href);return;
@@ -1748,13 +1865,6 @@ function startLongPress(e,id){
 function cancelLongPress(){
   clearTimeout(_lpTimer);_lpTimer=null;_lpId=null;
 }
-
-
-window.addEventListener('appinstalled',()=>{
-  hideInstallBanner();
-  _deferredPrompt=null;
-  toast('App installed successfully!');
-});
 
 function showInstallBanner(){
   const existing=document.getElementById('installBanner');
@@ -1939,13 +2049,6 @@ window.addEventListener('appinstalled', () => {
   _deferredPrompt = null;
   toast('App installed!');
 });
-async function installApp(){
-  if(!_deferredPrompt) return;
-  _deferredPrompt.prompt();
-  const {outcome} = await _deferredPrompt.userChoice;
-  if(outcome === 'accepted') hideInstallBanner();
-  _deferredPrompt = null;
-}
 
 // ── Init PWA ──
 generateManifest();
@@ -2022,7 +2125,7 @@ fbDb   = firebase.firestore();
 
 // Access control is handled by Firestore security rules — no email list needed here
 let gUser = null;
-fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+try { fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{}); } catch(e){}
 
 fbAuth.onAuthStateChanged(user => {
   if(user){
@@ -2062,18 +2165,14 @@ function updateAuthUI(user){
     signOutBtn.style.display  = '';
     authTitle.textContent     = user.displayName || user.email;
     authStatus.textContent    = user.email;
-    // Avatar
     if(user.photoURL){
-      avatarArea.innerHTML = `<img class="user-avatar" src="${user.photoURL}" alt="avatar" onclick="void(0)">`;
+      avatarArea.innerHTML = `<img class="user-avatar" src="${user.photoURL}" alt="avatar">`;
     } else {
       const initials = (user.displayName||user.email).charAt(0).toUpperCase();
-      avatarArea.innerHTML = `<div class="user-avatar-placeholder" style="background:var(--primary-light)">${initials}</div>`;
+      avatarArea.innerHTML = `<div class="user-avatar-placeholder" style="background:var(--primary-light);font-weight:800;color:var(--primary);font-size:14px">${initials}</div>`;
     }
-    // Topbar avatar
-    const tv = document.getElementById('topbarUserAvatar');
-    if(tv && user.photoURL){
-      tv.innerHTML = `<img class="user-avatar" src="${user.photoURL}" alt="">`;
-    }
+    // Main topbar avatar
+    _renderMainTopbarAvatar(user);
   } else {
     signInArea.style.display  = '';
     backupArea.style.display  = 'none';
@@ -2081,8 +2180,21 @@ function updateAuthUI(user){
     authTitle.textContent     = 'Google Account';
     authStatus.textContent    = 'Not signed in';
     avatarArea.innerHTML = `<div class="user-avatar-placeholder" onclick="gSignIn()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`;
-    const tv = document.getElementById('topbarUserAvatar');
+    const tv = document.getElementById('mainTopbarAvatar');
     if(tv) tv.innerHTML='';
+  }
+}
+
+function _renderMainTopbarAvatar(user){
+  const tv = document.getElementById('mainTopbarAvatar');
+  if(!tv) return;
+  if(user && user.photoURL){
+    tv.innerHTML=`<img class="user-avatar" src="${user.photoURL}" alt="" onclick="showUserPopup()" style="cursor:pointer">`;
+  } else if(user){
+    const initials=(user.displayName||user.email).charAt(0).toUpperCase();
+    tv.innerHTML=`<div class="user-avatar-placeholder" onclick="showUserPopup()" style="font-weight:800;font-size:14px;color:var(--primary);background:rgba(255,255,255,.25)">${initials}</div>`;
+  } else {
+    tv.innerHTML='';
   }
 }
 
@@ -2098,6 +2210,8 @@ function updateAuthUICached(cu){
     avatarArea.innerHTML = `<img class="user-avatar" src="${cu.photo}" alt="" onclick="gSignIn()">`;
   }
   if(signInArea) signInArea.style.display = '';
+  // Also update main topbar avatar from cache
+  _renderMainTopbarAvatar(cu.photo?{photoURL:cu.photo,displayName:cu.name,email:cu.email}:null);
 }
 
 async function gSignIn(){
