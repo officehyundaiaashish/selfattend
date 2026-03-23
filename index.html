@@ -2080,55 +2080,10 @@ document.addEventListener('DOMContentLoaded', function(){
 // Project: Aashish Giri's existing Firestore project
 // ═══════════════════════════════════════════════════════
 // Guard: run Firebase init only when SDK is available
-function initFirebase(){
-if(typeof firebase === 'undefined'){
-    // Retry after short delay (offline / slow load)
-    setTimeout(initFirebase, 300);
-    return;
-  }
-const FB_CONFIG = (()=>{
-  // Config is obfuscated — Firestore security rules enforce access control
-  const _a = ['AIzaSyApVZ0wN8eIZKO9ys7CkpVHwBZ1P7q6ztE','officedesk-6c56e.firebaseapp.com','officedesk-6c56e','officedesk-6c56e.firebasestorage.app','342843064222','1:342843064222:web:b4e81090796664bf39608f'];
-  return {apiKey:_a[0],authDomain:_a[1],projectId:_a[2],storageBucket:_a[3],messagingSenderId:_a[4],appId:_a[5]};
-})();
+// ── Firebase global variables ──
+let fbApp, fbAuth, fbDb, gUser = null;
 
-// Initialize Firebase (only once)
-let fbApp, fbAuth, fbDb;
-try {
-  fbApp = firebase.app();
-} catch(e) {
-  fbApp = firebase.initializeApp(FB_CONFIG);
-}
-fbAuth = firebase.auth();
-fbDb   = firebase.firestore();
-
-// Access control is handled by Firestore security rules — no email list needed here
-let gUser = null;
-fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
-fbAuth.onAuthStateChanged(user => {
-  if(user){
-    gUser = user;
-    localStorage.setItem('sa_guser', JSON.stringify({
-      email: user.email,
-      name: user.displayName,
-      photo: user.photoURL
-    }));
-    updateAuthUI(user);
-  } else {
-    gUser = null;
-    // Try to restore from localStorage (for display only)
-    const cached = localStorage.getItem('sa_guser');
-    if(cached){
-      const cu = JSON.parse(cached);
-      // Show cached but mark as needing re-auth
-      updateAuthUICached(cu);
-    } else {
-      updateAuthUI(null);
-    }
-  }
-});
-
+// ── All Firebase/Auth functions — global scope ──
 function updateAuthUI(user){
   localStorage.removeItem('sa_guser_cached');
   // Update home topbar avatar
@@ -2229,7 +2184,34 @@ async function gSignOut(skipConfirm=false){
 }
 
 // ── Google Backup — save to Firestore ──
-} // end initFirebase
+
+// ── initFirebase — called after SDK loads ──
+function initFirebase(){
+  if(typeof firebase === 'undefined'){
+    setTimeout(initFirebase, 300);
+    return;
+  }
+  const FB_CONFIG = (()=>{
+    const _a = ['AIzaSyApVZ0wN8eIZKO9ys7CkpVHwBZ1P7q6ztE','officedesk-6c56e.firebaseapp.com','officedesk-6c56e','officedesk-6c56e.firebasestorage.app','342843064222','1:342843064222:web:b4e81090796664bf39608f'];
+    return {apiKey:_a[0],authDomain:_a[1],projectId:_a[2],storageBucket:_a[3],messagingSenderId:_a[4],appId:_a[5]};
+  })();
+  try { fbApp = firebase.app(); } catch(e) { fbApp = firebase.initializeApp(FB_CONFIG); }
+  fbAuth = firebase.auth();
+  fbDb   = firebase.firestore();
+  fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  fbAuth.onAuthStateChanged(user => {
+    if(user){
+      gUser = user;
+      localStorage.setItem('sa_guser', JSON.stringify({email:user.email,name:user.displayName,photo:user.photoURL}));
+      updateAuthUI(user);
+    } else {
+      gUser = null;
+      const cached = localStorage.getItem('sa_guser');
+      if(cached){ updateAuthUICached(JSON.parse(cached)); }
+      else { updateAuthUI(null); }
+    }
+  });
+}
 
 // Google backup/restore — global scope so HTML buttons can call them
 async function doGoogleBackup(){
