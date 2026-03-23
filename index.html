@@ -1296,8 +1296,8 @@ function sdMenu(){
   const btn=document.querySelector('#sdPage .topbar button:last-child');
   ctxMenu(btn,[
     {i:'edit',l:'Edit Subject',fn:()=>editSub(curSub)},
-    {i:'cal_month',l:'Clear This Month',fn:()=>clearSubMonth(curSub)},
-    {i:'delete_sweep',l:'Clear All Attendance',fn:()=>clearSubAtt(curSub)}
+    {i:'cal_month',l:'Clear This Month',d:true,fn:()=>clearSubMonth(curSub)},
+    {i:'delete_sweep',l:'Clear All Attendance',d:true,fn:()=>clearSubAtt(curSub)}
   ]);
 }
 
@@ -1351,7 +1351,14 @@ const SVGICONS={
 
 function ctxMenu(anchorEl,items){
   const m=document.getElementById('ctxMenu');
-  m.innerHTML=items.map((it,i)=>`<button class="ctx-item ${it.d?'danger':''}" onclick="ctxAct(${i})">${SVGICONS[it.i]||''}${it.l}</button>`).join('');
+  m.innerHTML=items.map((it,i)=>{
+    const isDanger=!!it.d;
+    const col=isDanger?'#e53935':'';
+    const style=isDanger?`style="color:#e53935"`:'';
+    const svgStyle=isDanger?`style="color:#e53935;opacity:1"`:'';
+    const icon=(SVGICONS[it.i]||'').replace('<svg ','<svg '+svgStyle+' ');
+    return`<button class="ctx-item${isDanger?' danger':''}" onclick="ctxAct(${i})" ${style}>${icon}${it.l}</button>`;
+  }).join('');
   m._items=items;
 
   // Reset to measure natural width
