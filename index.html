@@ -823,7 +823,7 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-i
 // =========================================
 // DATA & STATE
 // =========================================
-let D={subjects:[],attendance:{}};
+let D={subjects:[],attendance:{},salaryApprovals:{}};
 let S={dark:false,targetPct:75,showOT:false,weeklyOff:0,weeklyOffHistory:{},salary:0,currency:'₹'};
 let tab='home',curSub=null,curView='cal',sdM=new Date().getMonth(),sdY=new Date().getFullYear();
 let bDate=new Date(),markCtx=null,selStatus=null,editId=null,cfCb=null,rptM=new Date().getMonth(),rptY=new Date().getFullYear();
@@ -883,6 +883,7 @@ function load(){
       }
       // Ensure attendance map exists for all subjects
       if(D.subjects) D.subjects.forEach(s=>{ if(!D.attendance[s.id]) D.attendance[s.id]=[]; });
+      if(!D.salaryApprovals) D.salaryApprovals = {};
       return;
     }
     // Legacy fallback
@@ -1622,7 +1623,14 @@ function applySalary(){
   toast(v > 0 ? 'Salary saved: ₹' + v.toLocaleString('en-IN') : 'Salary cleared');
 }
 
+// Approved days state — loaded from D.salaryApprovals per month
+let _salApproved = {a:0, hd:0, l:0};
+
 function openSalaryCalc(){
+  // Load saved approvals for current report month
+  const mk = `${rptY}-${String(rptM+1).padStart(2,'0')}`;
+  const saved = (D.salaryApprovals||{})[mk];
+  _salApproved = saved ? {a:saved.a||0, hd:saved.hd||0, l:saved.l||0} : {a:0, hd:0, l:0};
   openFull('salaryPage');
   renderSalaryPage();
 }
@@ -1631,7 +1639,6 @@ function renderSalaryPage(){
   const body = document.getElementById('salaryPageBody');
   if(!body) return;
 
-  // No salary set
   if(!S.salary || S.salary <= 0){
     body.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:60px 24px;text-align:center;">
@@ -1656,103 +1663,154 @@ function renderSalaryPage(){
 
   const salary = S.salary;
   const mn = MONTHS[rptM], yr = rptY;
+  const cur = S.currency||'₹';
 
-  // Working days in month (calendar days minus weekly offs)
+  // Load saved approvals for this month
+  const mk = `${yr}-${String(rptM+1).padStart(2,'0')}`;
+  const savedApp = (D.salaryApprovals||{})[mk];
+  if(savedApp){
+    _salApproved = {a:savedApp.a||0, hd:savedApp.hd||0, l:savedApp.l||0};
+  }
+
   const weekOff = getWeeklyOffForMonth(yr, rptM);
   const daysInMonth = new Date(yr, rptM + 1, 0).getDate();
   let calWorkDays = 0;
   for(let d = 1; d <= daysInMonth; d++){
-    const dow = new Date(yr, rptM, d).getDay();
-    if(dow !== weekOff) calWorkDays++;
+    if(new Date(yr, rptM, d).getDay() !== weekOff) calWorkDays++;
   }
-
   const perDay = salary / calWorkDays;
 
-  // Aggregate all subjects for this month
-  let totalP=0, totalA=0, totalH=0, totalL=0, totalHD=0, totalPOT=0, totalAOT=0;
+  let totalP=0,totalA=0,totalH=0,totalL=0,totalHD=0,totalPOT=0,totalAOT=0;
   D.subjects.forEach(s => {
-    const att = D.attendance[s.id] || [];
-    att.forEach(a => {
-      const d = new Date(a.date);
-      if(d.getMonth() !== rptM || d.getFullYear() !== yr) return;
-      if(a.s==='P')  totalP++;
-      else if(a.s==='A')  totalA++;
-      else if(a.s==='H')  totalH++;
-      else if(a.s==='L')  totalL++;
+    (D.attendance[s.id]||[]).forEach(a => {
+      const d=new Date(a.date);
+      if(d.getMonth()!==rptM||d.getFullYear()!==yr) return;
+      if(a.s==='P') totalP++;
+      else if(a.s==='A') totalA++;
+      else if(a.s==='H') totalH++;
+      else if(a.s==='L') totalL++;
       else if(a.s==='HD') totalHD++;
       else if(a.s==='POT') totalPOT++;
       else if(a.s==='AOT') totalAOT++;
     });
   });
 
-  // Salary calc (LOP basis — Indian standard)
-  // Paid: Present + Holiday + Leave = full day. Half Day = 0.5. Absent = 0 (deducted)
-  // Net = Salary - (Absent * perDay) - (HalfDay * 0.5 * perDay) - (AOT absent portion)
-  const absentDays = totalA + totalAOT;
-  const halfDays   = totalHD;
-  const absentDeduction = absentDays * perDay;
-  const hdDeduction     = halfDays * 0.5 * perDay;
+  const rawAbsent = totalA + totalAOT;
+  const rawHD     = totalHD;
+  const rawL      = totalL;
+
+  // Clamp approved values to actual totals
+  const appA  = Math.min(_salApproved.a,  rawAbsent);
+  const appHD = Math.min(_salApproved.hd, rawHD);
+  const appL  = Math.min(_salApproved.l,  rawL);
+
+  const effectiveAbsent = rawAbsent - appA;
+  const effectiveHD     = rawHD     - appHD;
+  // approved L => treated as full paid (they were already leave, now officially approved = no deduction, same as before)
+  // But if company approves extra L that were marked as A: already handled via appA
+
+  const absentDeduction = effectiveAbsent * perDay;
+  const hdDeduction     = effectiveHD * 0.5 * perDay;
   const totalDeduction  = absentDeduction + hdDeduction;
   const netSalary       = Math.max(0, salary - totalDeduction);
   const earnedPct       = Math.round((netSalary / salary) * 100);
+  const approvedSaving  = (appA * perDay) + (appHD * 0.5 * perDay);
 
-  const fmt = n => (S.currency||'₹') + Math.round(n).toLocaleString('en-IN');
+  const fmt    = n => cur + Math.round(n).toLocaleString('en-IN');
   const fmtDay = n => n + (n===1?' day':' days');
 
-  // Per-subject breakdown
+  // stepper HTML helper
+  const stepper = (key, val, max) => `
+    <div style="display:flex;align-items:center;gap:0;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;height:36px;">
+      <button onclick="_salStep('${key}',-1,${max})" style="width:36px;height:36px;border:none;background:transparent;font-size:20px;cursor:pointer;color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0">−</button>
+      <span id="sal_app_${key}" style="min-width:28px;text-align:center;font-size:15px;font-weight:700;color:var(--text)">${val}</span>
+      <button onclick="_salStep('${key}',1,${max})" style="width:36px;height:36px;border:none;background:transparent;font-size:20px;cursor:pointer;color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0">+</button>
+    </div>`;
+
+  // Per subject breakdown
   const subBreakdown = D.subjects.map(s => {
-    const att = (D.attendance[s.id]||[]).filter(a => {
-      const d = new Date(a.date);
-      return d.getMonth()===rptM && d.getFullYear()===yr;
-    });
-    const p  = att.filter(a=>a.s==='P'||a.s==='POT').length;
-    const ab = att.filter(a=>a.s==='A'||a.s==='AOT').length;
-    const h  = att.filter(a=>a.s==='H').length;
-    const l  = att.filter(a=>a.s==='L').length;
-    const hd = att.filter(a=>a.s==='HD').length;
-    const ded = (ab * perDay) + (hd * 0.5 * perDay);
-    return {name:s.name, p, ab, h, l, hd, ded};
-  }).filter(s => s.p+s.ab+s.h+s.l+s.hd > 0);
+    const att=(D.attendance[s.id]||[]).filter(a=>{const d=new Date(a.date);return d.getMonth()===rptM&&d.getFullYear()===yr;});
+    const p=att.filter(a=>a.s==='P'||a.s==='POT').length;
+    const ab=att.filter(a=>a.s==='A'||a.s==='AOT').length;
+    const h=att.filter(a=>a.s==='H').length;
+    const l=att.filter(a=>a.s==='L').length;
+    const hd=att.filter(a=>a.s==='HD').length;
+    const ded=(ab*perDay)+(hd*0.5*perDay);
+    return {name:s.name,p,ab,h,l,hd,ded};
+  }).filter(s=>s.p+s.ab+s.h+s.l+s.hd>0);
 
   body.innerHTML = `
     <!-- Hero -->
     <div class="sal-hero">
       <div style="font-size:13px;opacity:.8;margin-bottom:8px;font-weight:500">${mn} ${yr} · Net Salary</div>
-      <div class="sal-amount">${fmt(netSalary)}</div>
-      <div class="sal-label">${earnedPct}% of ${fmt(salary)} gross</div>
-      ${totalDeduction>0?`<div style="margin-top:10px;display:inline-block;background:rgba(0,0,0,.2);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600">Deduction: ${fmt(totalDeduction)}</div>`:'<div style="margin-top:10px;display:inline-block;background:rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600">Full salary — no deductions</div>'}
+      <div class="sal-amount" id="salHeroNet">${fmt(netSalary)}</div>
+      <div class="sal-label" id="salHeroPct">${earnedPct}% of ${fmt(salary)} gross</div>
+      <div id="salHeroBadge" style="margin-top:10px">
+        ${totalDeduction>0
+          ?`<span style="display:inline-block;background:rgba(0,0,0,.22);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600">Deduction: ${fmt(totalDeduction)}</span>`
+          :`<span style="display:inline-block;background:rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600">Full salary — no deductions</span>`}
+        ${approvedSaving>0?`<span style="display:inline-block;background:rgba(255,255,255,.18);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;margin-left:6px">Saved: +${fmt(approvedSaving)}</span>`:''}
+      </div>
     </div>
 
-    <!-- Summary card -->
+    <!-- Approved by company card -->
+    ${(rawAbsent>0||rawHD>0||rawL>0)?`
+    <div class="sal-card">
+      <div class="sal-card-title">Company Approved</div>
+      <div style="padding:8px 16px 4px;font-size:13px;color:var(--text2);line-height:1.5">How many days did your company approve? Approved days won't be deducted.</div>
+      ${rawAbsent>0?`
+      <div class="sal-row" style="align-items:center">
+        <span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#c62828"></span>
+          <span>
+            <div style="font-size:14px;color:var(--text);font-weight:500">Approved Absents</div>
+            <div style="font-size:11px;color:var(--text3)">Out of ${fmtDay(rawAbsent)}</div>
+          </span>
+        </span>
+        ${stepper('a', appA, rawAbsent)}
+      </div>`:''}
+      ${rawHD>0?`
+      <div class="sal-row" style="align-items:center">
+        <span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#6a1b9a"></span>
+          <span>
+            <div style="font-size:14px;color:var(--text);font-weight:500">Approved Half Days</div>
+            <div style="font-size:11px;color:var(--text3)">Out of ${fmtDay(rawHD)}</div>
+          </span>
+        </span>
+        ${stepper('hd', appHD, rawHD)}
+      </div>`:''}
+      ${rawL>0?`
+      <div class="sal-row" style="align-items:center">
+        <span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#e65100"></span>
+          <span>
+            <div style="font-size:14px;color:var(--text);font-weight:500">Approved Leaves</div>
+            <div style="font-size:11px;color:var(--text3)">Out of ${fmtDay(rawL)} marked</div>
+          </span>
+        </span>
+        ${stepper('l', appL, rawL)}
+      </div>`:''}
+    </div>` : ''}
+
+    <!-- Summary -->
     <div class="sal-card">
       <div class="sal-card-title">Summary</div>
-      <div class="sal-row">
-        <span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#2e7d32"></span>Gross Salary</span>
-        <span class="sal-row-val">${fmt(salary)}</span>
-      </div>
-      <div class="sal-row">
-        <span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#1565c0"></span>Working Days (this month)</span>
-        <span class="sal-row-val">${fmtDay(calWorkDays)}</span>
-      </div>
-      <div class="sal-row">
-        <span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#388e3c"></span>Per Day Value</span>
-        <span class="sal-row-val">${fmt(perDay)}</span>
-      </div>
+      <div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#2e7d32"></span>Gross Salary</span><span class="sal-row-val">${fmt(salary)}</span></div>
+      <div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#1565c0"></span>Working Days</span><span class="sal-row-val">${fmtDay(calWorkDays)}</span></div>
+      <div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#388e3c"></span>Per Day Value</span><span class="sal-row-val">${fmt(perDay)}</span></div>
     </div>
 
     <!-- Attendance breakdown -->
     <div class="sal-card">
-      <div class="sal-card-title">Attendance This Month</div>
-      ${totalP>0?`<div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#1b5e20"></span>Present (P/OT)</span><span class="sal-row-val earn">${fmtDay(totalP+totalPOT)}</span></div>`:''}
+      <div class="sal-card-title">Deductions</div>
+      ${totalP+totalPOT>0?`<div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#1b5e20"></span>Present</span><span class="sal-row-val earn">${fmtDay(totalP+totalPOT)}</span></div>`:''}
       ${totalH>0?`<div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#1565c0"></span>Holiday</span><span class="sal-row-val">${fmtDay(totalH)}</span></div>`:''}
-      ${totalL>0?`<div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#e65100"></span>Leave (Paid)</span><span class="sal-row-val">${fmtDay(totalL)}</span></div>`:''}
-      ${totalHD>0?`<div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#6a1b9a"></span>Half Day</span><span class="sal-row-val deduct">−${fmt(hdDeduction)}</span></div>`:''}
-      ${absentDays>0?`<div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#c62828"></span>Absent</span><span class="sal-row-val deduct">−${fmt(absentDeduction)}</span></div>`:''}
+      ${totalL>0?`<div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#e65100"></span>Leave</span><span class="sal-row-val">${fmtDay(totalL)}</span></div>`:''}
+      ${effectiveHD>0?`<div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#6a1b9a"></span>Half Day${appHD>0?' ('+appHD+' approved)':''}</span><span class="sal-row-val deduct" id="salHdRow">−${fmt(hdDeduction)}</span></div>`:''}
+      ${effectiveAbsent>0?`<div class="sal-row"><span class="sal-row-label"><span class="sal-breakdown-dot" style="background:#c62828"></span>Absent${appA>0?' ('+appA+' approved)':''}</span><span class="sal-row-val deduct" id="salAbRow">−${fmt(absentDeduction)}</span></div>`:''}
+      ${totalDeduction===0&&(rawAbsent>0||rawHD>0)?`<div class="sal-row"><span class="sal-row-label" style="color:var(--present)"><span class="sal-breakdown-dot" style="background:var(--present)"></span>All approved — no deduction</span></div>`:''}
     </div>
 
-    ${subBreakdown.length > 1 ? `
-    <!-- Per subject -->
-    <div class="sal-card" style="margin-bottom:0">
+    ${subBreakdown.length>1?`
+    <div class="sal-card">
       <div class="sal-card-title">Per Subject</div>
       ${subBreakdown.map(s=>`
       <div class="sal-row">
@@ -1762,17 +1820,118 @@ function renderSalaryPage(){
         </span>
         <span class="sal-row-val ${s.ded>0?'deduct':''}">${s.ded>0?'−'+fmt(s.ded):'Full'}</span>
       </div>`).join('')}
-    </div>` : ''}
+    </div>`:''}
 
-    <!-- Net result -->
+    <!-- Net card -->
     <div class="sal-net-card">
-      <div>
+      <div style="flex:1">
         <div style="color:rgba(255,255,255,.8);font-size:12px;font-weight:500;margin-bottom:2px">Net Take-Home · ${mn} ${yr}</div>
-        <div style="color:#fff;font-size:26px;font-weight:700;font-family:'DM Sans',sans-serif;letter-spacing:-.3px">${fmt(netSalary)}</div>
+        <div style="color:#fff;font-size:26px;font-weight:700;font-family:'DM Sans',sans-serif;letter-spacing:-.3px" id="salNetBottom">${fmt(netSalary)}</div>
+        <div id="salActualRow" style="display:${approvedSaving>0?'flex':'none'};align-items:center;gap:6px;margin-top:5px">
+          <span style="font-size:12px;color:rgba(255,255,255,.6)">Without approval:</span>
+          <span style="font-size:13px;font-weight:600;color:rgba(255,255,255,.75);text-decoration:line-through" id="salActualVal">${fmt(Math.max(0,salary-((rawAbsent*perDay)+(rawHD*0.5*perDay))))}</span>
+        </div>
       </div>
-      ${totalDeduction>0?`<div style="text-align:right"><div style="color:rgba(255,255,255,.7);font-size:11px;margin-bottom:2px">Deducted</div><div style="color:#ffcdd2;font-size:17px;font-weight:700">−${fmt(totalDeduction)}</div></div>`:'<div style="background:rgba(255,255,255,.2);border-radius:10px;padding:6px 12px;color:#fff;font-size:13px;font-weight:600">No deductions</div>'}
+      ${totalDeduction>0
+        ?`<div style="text-align:right"><div style="color:rgba(255,255,255,.7);font-size:11px;margin-bottom:2px">Deducted</div><div style="color:#ffcdd2;font-size:17px;font-weight:700" id="salDedBottom">−${fmt(totalDeduction)}</div></div>`
+        :`<div style="background:rgba(255,255,255,.2);border-radius:10px;padding:6px 12px;color:#fff;font-size:13px;font-weight:600">No deductions</div>`}
     </div>
     <div style="height:32px"></div>`;
+}
+
+function _salStep(key, dir, max){
+  _salApproved[key] = Math.max(0, Math.min(max, (_salApproved[key]||0) + dir));
+  const el = document.getElementById('sal_app_'+key);
+  if(el) el.textContent = _salApproved[key];
+  _salRecalc();
+}
+
+function _salSaveApprovals(net, actualNet, gross, perDay){
+  if(!D.salaryApprovals) D.salaryApprovals = {};
+  const mk = `${rptY}-${String(rptM+1).padStart(2,'0')}`;
+  D.salaryApprovals[mk] = {
+    a:  _salApproved.a||0,
+    hd: _salApproved.hd||0,
+    l:  _salApproved.l||0,
+    month: MONTHS[rptM]+' '+rptY,
+    gross,
+    perDay: Math.round(perDay),
+    actualSalary:   Math.round(actualNet),
+    approvedSalary: Math.round(net),
+    savedAt: new Date().toISOString()
+  };
+  save();
+}
+
+function _salRecalc(){
+  if(!S.salary||!D.subjects.length) return;
+  const salary=S.salary, cur=S.currency||'₹';
+  const yr=rptY, mn=rptM;
+  const weekOff=getWeeklyOffForMonth(yr,mn);
+  const daysInMonth=new Date(yr,mn+1,0).getDate();
+  let calWorkDays=0;
+  for(let d=1;d<=daysInMonth;d++){if(new Date(yr,mn,d).getDay()!==weekOff)calWorkDays++;}
+  const perDay=salary/calWorkDays;
+
+  let totalA=0,totalHD=0,totalAOT=0;
+  D.subjects.forEach(s=>{
+    (D.attendance[s.id]||[]).forEach(a=>{
+      const d=new Date(a.date);
+      if(d.getMonth()!==mn||d.getFullYear()!==yr) return;
+      if(a.s==='A') totalA++;
+      else if(a.s==='AOT') totalAOT++;
+      else if(a.s==='HD') totalHD++;
+    });
+  });
+
+  const rawAbsent=totalA+totalAOT, rawHD=totalHD;
+  // Actual (no approvals)
+  const actualDeduction=(rawAbsent*perDay)+(rawHD*0.5*perDay);
+  const actualNet=Math.max(0,salary-actualDeduction);
+
+  // Approved
+  const appA=Math.min(_salApproved.a||0, rawAbsent);
+  const appHD=Math.min(_salApproved.hd||0, rawHD);
+  const effectiveAbsent=rawAbsent-appA;
+  const effectiveHD=rawHD-appHD;
+  const absDed=effectiveAbsent*perDay;
+  const hdDed=effectiveHD*0.5*perDay;
+  const totalDed=absDed+hdDed;
+  const net=Math.max(0,salary-totalDed);
+  const pct=Math.round((net/salary)*100);
+  const saved=(appA*perDay)+(appHD*0.5*perDay);
+  const fmt=n=>cur+Math.round(n).toLocaleString('en-IN');
+  const hasApproval = appA>0||appHD>0||(_salApproved.l||0)>0;
+
+  // Update hero
+  const heroNet=document.getElementById('salHeroNet');
+  const heroPct=document.getElementById('salHeroPct');
+  const heroBadge=document.getElementById('salHeroBadge');
+  const netBottom=document.getElementById('salNetBottom');
+  const dedBottom=document.getElementById('salDedBottom');
+  const actualRow=document.getElementById('salActualRow');
+
+  if(heroNet) heroNet.textContent=fmt(net);
+  if(heroPct) heroPct.textContent=pct+'% of '+fmt(salary)+' gross';
+  if(heroBadge) heroBadge.innerHTML=
+    (totalDed>0?`<span style="display:inline-block;background:rgba(0,0,0,.22);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600">Deduction: ${fmt(totalDed)}</span>`
+    :`<span style="display:inline-block;background:rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600">Full salary</span>`)
+    +(saved>0?`<span style="display:inline-block;background:rgba(255,255,255,.18);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;margin-left:6px">+${fmt(saved)} saved</span>`:'');
+  if(netBottom) netBottom.textContent=fmt(net);
+  if(dedBottom) dedBottom.textContent='−'+fmt(totalDed);
+  // Show actual salary row only when there's an approval difference
+  if(actualRow){
+    if(hasApproval && Math.round(actualNet)!==Math.round(net)){
+      actualRow.style.display='flex';
+      const av=actualRow.querySelector('#salActualVal');
+      if(av) av.textContent=fmt(actualNet);
+    } else {
+      actualRow.style.display='none';
+    }
+  }
+
+  // Auto-save approvals to D
+  _salSaveApprovals(net, actualNet, salary, perDay);
 }
 
 function showUserPopup(){
