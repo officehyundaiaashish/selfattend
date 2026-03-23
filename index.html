@@ -2125,7 +2125,7 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 async function dlFile(name, content, mime){
   const blob = new Blob([content], {type: mime});
   // Detect Capacitor WebView — showSaveFilePicker not available there
-  const isCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  const isCapacitor = _isCap();
   if(!isCapacitor && window.showSaveFilePicker){
     try{
       const ext = name.split('.').pop();
@@ -2644,6 +2644,27 @@ let fbApp=null, fbAuth=null, fbDb=null, gUser=null;
 
   try { fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{}); } catch(e){}
 
+  // Handle redirect result from Capacitor signInWithRedirect
+  // Must be called every time the app loads — Firebase checks if there's a pending redirect
+  fbAuth.getRedirectResult().then(result => {
+    if(result && result.user){
+      // User signed in via redirect — onAuthStateChanged will also fire, but
+      // explicitly save here to be sure it's captured before any race
+      gUser = result.user;
+      localStorage.setItem('sa_guser', JSON.stringify({
+        email: result.user.email,
+        name:  result.user.displayName,
+        photo: result.user.photoURL
+      }));
+      updateAuthUI(result.user);
+    }
+  }).catch(e => {
+    // auth/no-auth-event is normal (no pending redirect) — ignore silently
+    if(e.code && e.code !== 'auth/no-auth-event' && e.code !== 'auth/null-user'){
+      console.warn('[SA] getRedirectResult error:', e.code);
+    }
+  });
+
   fbAuth.onAuthStateChanged(user => {
     if(user){
       gUser = user;
@@ -2734,12 +2755,23 @@ async function gSignIn(){
   try{
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({prompt:'select_account'});
-    await fbAuth.signInWithPopup(provider);
+    const isCap = _isCap();
+    if(isCap){
+      // Capacitor WebView: use redirect — popup causes unresolvable external browser loop
+      await fbAuth.signInWithRedirect(provider);
+      // After redirect completes, onAuthStateChanged fires — nothing needed here
+    } else {
+      await fbAuth.signInWithPopup(provider);
+    }
   } catch(e){
-    if(e.code !== 'auth/popup-closed-by-user'){
+    if(e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request'){
       toast('Sign in failed: ' + e.message);
     }
   }
+}
+
+function _isCap(){
+  return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 }
 
 async function gSignOut(){
