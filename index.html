@@ -484,6 +484,11 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-i
             <div class="settings-text"><div class="settings-label">Monthly Salary</div><div class="settings-value" id="salaryVal">Not set</div></div>
             <span class="material-icons-round" style="color:var(--text3)">chevron_right</span>
           </div>
+          <div class="settings-item" onclick="editCurrency()">
+            <div class="settings-icon" style="background:#fff3e0"><span class="material-icons-round" style="color:#e65100;font-size:20px">paid</span></div>
+            <div class="settings-text"><div class="settings-label">Currency Symbol</div><div class="settings-value" id="currencyVal">₹</div></div>
+            <span class="material-icons-round" style="color:var(--text3)">chevron_right</span>
+          </div>
         </div>
         <div class="settings-group">
           <div class="settings-group-label">Data</div>
@@ -782,11 +787,23 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-i
     <div class="sheet-handle"></div>
     <div class="sheet-title">Monthly Salary</div>
     <div class="form-field">
-      <label>Gross Monthly Salary (₹)</label>
+      <label>Gross Monthly Salary (<span id="salaryInputSymbol">₹</span>)</label>
       <input type="number" id="salaryInput" placeholder="e.g. 25000" inputmode="numeric" min="0">
     </div>
     <div style="padding:0 16px 16px">
       <button class="btn-primary" onclick="applySalary()"><span class="material-icons-round">check</span> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Currency picker sheet -->
+<div class="overlay" id="currencySheet" onclick="bgClose(this,event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Currency Symbol</div>
+    <div id="currencyGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 8px"></div>
+    <div style="padding:8px 16px 16px">
+      <button class="btn-primary" onclick="applyCurrency()"><span class="material-icons-round">check</span> Apply</button>
     </div>
   </div>
 </div>
@@ -807,7 +824,7 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-i
 // DATA & STATE
 // =========================================
 let D={subjects:[],attendance:{}};
-let S={dark:false,targetPct:75,showOT:false,weeklyOff:0,weeklyOffHistory:{},salary:0};
+let S={dark:false,targetPct:75,showOT:false,weeklyOff:0,weeklyOffHistory:{},salary:0,currency:'₹'};
 let tab='home',curSub=null,curView='cal',sdM=new Date().getMonth(),sdY=new Date().getFullYear();
 let bDate=new Date(),markCtx=null,selStatus=null,editId=null,cfCb=null,rptM=new Date().getMonth(),rptY=new Date().getFullYear();
 
@@ -860,7 +877,7 @@ function load(){
       if(p.db) D = p.db;
       if(p.settings){
         S = Object.assign(
-          {dark:false, targetPct:75, showOT:false, weeklyOff:0, weeklyOffHistory:{}, salary:0},
+          {dark:false, targetPct:75, showOT:false, weeklyOff:0, weeklyOffHistory:{}, salary:0, currency:'₹'},
           p.settings
         );
       }
@@ -914,7 +931,9 @@ function applyS(){
   const wEl=document.getElementById('weeklyOffVal');
   if(wEl)wEl.textContent=DAYS_SHORT[S.weeklyOff]||'Sunday';
   const sEl=document.getElementById('salaryVal');
-  if(sEl)sEl.textContent=S.salary>0?'₹'+Number(S.salary).toLocaleString('en-IN'):'Not set';
+  if(sEl)sEl.textContent=S.salary>0?(S.currency||'₹')+Number(S.salary).toLocaleString('en-IN'):'Not set';
+  const cEl=document.getElementById('currencyVal');
+  if(cEl)cEl.textContent=S.currency||'₹';
 }
 
 // =========================================
@@ -1545,9 +1564,55 @@ function openAbout(){openFull('aboutPage');}
 // SALARY CALCULATOR
 // =========================================
 function editSalary(){
+  const sym=document.getElementById('salaryInputSymbol');
+  if(sym) sym.textContent=S.currency||'₹';
   document.getElementById('salaryInput').value = S.salary || '';
   openSheet('salaryInputSheet');
   setTimeout(()=>document.getElementById('salaryInput').focus(), 350);
+}
+
+const CURRENCIES=[
+  {s:'₹',l:'INR — Indian Rupee'},
+  {s:'$',l:'USD — US Dollar'},
+  {s:'€',l:'EUR — Euro'},
+  {s:'£',l:'GBP — British Pound'},
+  {s:'¥',l:'JPY — Japanese Yen'},
+  {s:'₩',l:'KRW — Korean Won'},
+  {s:'฿',l:'THB — Thai Baht'},
+  {s:'₺',l:'TRY — Turkish Lira'},
+  {s:'د.إ',l:'AED — UAE Dirham'},
+  {s:'৳',l:'BDT — Bangladeshi Taka'},
+];
+let _pendingCurrency='₹';
+
+function editCurrency(){
+  _pendingCurrency = S.currency||'₹';
+  const grid=document.getElementById('currencyGrid');
+  grid.innerHTML=CURRENCIES.map(c=>`
+    <button class="status-btn ${_pendingCurrency===c.s?'selected s-H':''}"
+      style="flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px"
+      onclick="selCurrency('${c.s}',this)">
+      <span style="font-size:18px;font-weight:700">${c.s}</span>
+      <span style="font-size:11px;opacity:.7;font-weight:400">${c.l}</span>
+    </button>`).join('');
+  openSheet('currencySheet');
+}
+
+function selCurrency(sym, btn){
+  _pendingCurrency=sym;
+  document.querySelectorAll('#currencyGrid .status-btn').forEach(b=>{
+    b.className='status-btn';
+    b.style.flexDirection='column';b.style.alignItems='flex-start';b.style.gap='2px';b.style.padding='12px 14px';
+  });
+  btn.className='status-btn selected s-H';
+  btn.style.flexDirection='column';btn.style.alignItems='flex-start';btn.style.gap='2px';btn.style.padding='12px 14px';
+}
+
+function applyCurrency(){
+  S.currency=_pendingCurrency;
+  save(); applyS();
+  closeSheet('currencySheet');
+  toast('Currency set to '+S.currency);
 }
 function applySalary(){
   const v = parseFloat(document.getElementById('salaryInput').value) || 0;
@@ -1631,7 +1696,7 @@ function renderSalaryPage(){
   const netSalary       = Math.max(0, salary - totalDeduction);
   const earnedPct       = Math.round((netSalary / salary) * 100);
 
-  const fmt = n => '₹' + Math.round(n).toLocaleString('en-IN');
+  const fmt = n => (S.currency||'₹') + Math.round(n).toLocaleString('en-IN');
   const fmtDay = n => n + (n===1?' day':' days');
 
   // Per-subject breakdown
@@ -1944,6 +2009,7 @@ function anySheetOpen(){
          document.getElementById('mPickSheet').classList.contains('open')||
          document.getElementById('targetSheet').classList.contains('open')||
          document.getElementById('salaryInputSheet').classList.contains('open')||
+         document.getElementById('currencySheet').classList.contains('open')||
          document.getElementById('confirmDlg').classList.contains('open');
 }
 function anyFullPageOpen(){
@@ -1962,7 +2028,7 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();
     if(document.getElementById('confirmDlg').classList.contains('open')){cfResolve(false);return;}
     if(anySheetOpen()){
-      closeSheet('markSheet');closeSheet('addSheet');closeSheet('mPickSheet');closeSheet('targetSheet');closeSheet('salaryInputSheet');return;
+      closeSheet('markSheet');closeSheet('addSheet');closeSheet('mPickSheet');closeSheet('targetSheet');closeSheet('salaryInputSheet');closeSheet('currencySheet');return;
     }
     if(document.getElementById('ctxMenu').classList.contains('open')){closeCtxMenu();return;}
     if(document.getElementById('sdPage').style.display==='flex'){closeSD();return;}
@@ -2038,7 +2104,7 @@ let _backPressedOnce=false,_backTimer=null;
 window.addEventListener('popstate',()=>{
   if(document.getElementById('confirmDlg').classList.contains('open')){cfResolve(false);history.pushState(null,'',location.href);return;}
   if(anySheetOpen()){
-    closeSheet('markSheet');closeSheet('addSheet');closeSheet('mPickSheet');closeSheet('targetSheet');closeSheet('salaryInputSheet');
+    closeSheet('markSheet');closeSheet('addSheet');closeSheet('mPickSheet');closeSheet('targetSheet');closeSheet('salaryInputSheet');closeSheet('currencySheet');
     const wo=document.getElementById('weeklyOffSheet');
     if(wo)closeSheet('weeklyOffSheet');
     history.pushState(null,'',location.href);return;
