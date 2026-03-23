@@ -529,21 +529,53 @@ select:-webkit-autofill {
       <button class="icon-btn" onclick="closeFull('aboutPage')"><span class="material-icons-round">arrow_back</span></button>
       <div class="topbar-title">About</div>
     </div>
-  <div style="overflow-y:auto;flex:1">
-    <div class="about-header">
-      <div class="about-logo"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg></div>
-      <div class="about-appname">Self Attendance</div>
-      <div style="font-size:13px;opacity:.8;margin-top:4px">Version 2.0.0 • Web Edition</div>
+    <div style="overflow-y:auto;flex:1">
+      <!-- Hero -->
+      <div style="background:linear-gradient(160deg,var(--primary) 0%,var(--primary-light) 100%);padding:36px 24px 28px;text-align:center;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.07)"></div>
+        <div style="position:absolute;bottom:-30px;left:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
+        <div style="width:72px;height:72px;background:rgba(255,255,255,.15);border-radius:20px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div style="font-size:26px;font-weight:900;color:#fff;font-family:'Space Grotesk',sans-serif;letter-spacing:-.5px">Self Attendance</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.7);margin-top:6px">by Aashish Giri</div>
+      </div>
+      <!-- Features -->
+      <div style="padding:16px 16px 0">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Features</div>
+        <div style="background:var(--card);border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border)">
+          <div class="about-item">
+            <div style="width:38px;height:38px;border-radius:10px;background:var(--primary-container);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="material-icons-round" style="color:var(--primary);font-size:20px">today</span></div>
+            <div><div style="font-size:14px;font-weight:700">Daily Attendance</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Mark Present, Absent, Leave & Holiday</div></div>
+          </div>
+          <div class="about-item">
+            <div style="width:38px;height:38px;border-radius:10px;background:#e8f5e9;display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="material-icons-round" style="color:#2e7d32;font-size:20px">bar_chart</span></div>
+            <div><div style="font-size:14px;font-weight:700">Reports</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Monthly stats & CSV export</div></div>
+          </div>
+          <div class="about-item">
+            <div style="width:38px;height:38px;border-radius:10px;background:#e3f2fd;display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="material-icons-round" style="color:#1565c0;font-size:20px">cloud_sync</span></div>
+            <div><div style="font-size:14px;font-weight:700">Google Backup</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Sync data via Google account</div></div>
+          </div>
+          <div class="about-item" style="border-bottom:none">
+            <div style="width:38px;height:38px;border-radius:10px;background:#f3e5f5;display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="material-icons-round" style="color:#6a1b9a;font-size:20px">dark_mode</span></div>
+            <div><div style="font-size:14px;font-weight:700">Dark Mode</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Eye-friendly theme support</div></div>
+          </div>
+        </div>
+      </div>
+      <!-- Developer -->
+      <div style="padding:16px">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Developer</div>
+        <div style="background:var(--card);border-radius:var(--radius-lg);padding:16px;border:1px solid var(--border);display:flex;align-items:center;gap:14px">
+          <div style="width:44px;height:44px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0;font-family:'Space Grotesk',sans-serif">A</div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--text)">Aashish Giri</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">All rights reserved</div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;padding:8px 16px 32px;font-size:12px;color:var(--text3)">Data stored locally on your device</div>
     </div>
-    <div style="background:var(--card);margin:12px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">
-      <div class="about-item"><span class="material-icons-round" style="color:var(--primary)">check_circle</span><div><div style="font-weight:700">Track Attendance</div><div style="font-size:13px;color:var(--text2)">Mark P/A/Leave/Holiday for any subject</div></div></div>
-      <div class="about-item"><span class="material-icons-round" style="color:#2e7d32">bar_chart</span><div><div style="font-weight:700">Reports & Analytics</div><div style="font-size:13px;color:var(--text2)">CSV exports & sharing</div></div></div>
-      <div class="about-item"><span class="material-icons-round" style="color:#1565c0">backup</span><div><div style="font-weight:700">Local Backup</div><div style="font-size:13px;color:var(--text2)">Save & restore data anytime</div></div></div>
-      <div class="about-item"><span class="material-icons-round" style="color:#6a1b9a">dark_mode</span><div><div style="font-weight:700">Dark Mode</div><div style="font-size:13px;color:var(--text2)">Eye-friendly dark theme</div></div></div>
-    </div>
-    <div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">All data stored locally on your device</div>
-  </div>
-</div><!-- end aboutPage -->
+  </div><!-- end aboutPage -->
 <!-- Mini Date Picker for By Date -->
 <div class="mini-cal-overlay" id="miniCalOverlay" onclick="if(event.target===this)closeMiniCal()">
   <div class="mini-cal-box">
@@ -754,7 +786,9 @@ function applyS(){
 // NAVIGATION
 // =========================================
 function switchTab(t){
-  if(tab===t)return;tab=t;
+  if(tab===t)return;
+  const wasHome=(tab==='home');
+  tab=t;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+t).classList.add('active');
@@ -763,6 +797,8 @@ function switchTab(t){
   document.getElementById('btnSearch').style.display=t==='home'?'':'none';
   document.getElementById('btnMenu').style.display=t!=='settings'?'':'none';
   document.getElementById('mainFab').style.display=t==='home'?'':'none';
+  // Push history so Android back button returns to home
+  if(t!=='home') history.pushState({tab:t},'',location.href);
   hideSearch();
   if(t==='home')renderHome();
   else if(t==='bydate')renderByDate();
@@ -1333,15 +1369,19 @@ function openBackupPage(){
   D.subjects.forEach(s=>{totalRec+=(D.attendance[s.id]||[]).length;});
   const sum=document.getElementById('backupSummary');
   if(sum){
-    sum.innerHTML=
-      `<b>${D.subjects.length}</b> Subject(s) &nbsp;|&nbsp; <b>${totalRec}</b> Records<br>`+
+    sum.innerHTML=`<b>${D.subjects.length}</b> Subject(s) &nbsp;|&nbsp; <b>${totalRec}</b> Records<br>`+
       `Dark: <b>${S.dark?'ON':'OFF'}</b> &nbsp;|&nbsp; Target: <b>${S.targetPct}%</b> &nbsp;|&nbsp; Weekly Off: <b>${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][S.weeklyOff]}</b>`;
   }
-  // Show Google last backup time
-  const gLbl = localStorage.getItem('sa_gLastBk');
-  const gSync = document.getElementById('gSyncStatus');
-  if(gSync) gSync.textContent = gLbl ? 'Last Google backup: '+gLbl : '';
+  const gLbl=localStorage.getItem('sa_gLastBk');
+  const gSync=document.getElementById('gSyncStatus');
+  if(gSync) gSync.textContent=gLbl?'Last Google backup: '+gLbl:'';
   openFull('backupPage');
+}
+
+// Unified backup — opens dialog if Google logged in
+function openUnifiedBackup(){
+  if(gUser){openBackupPage();}
+  else{openBackupPage();}
 }
 function closeBackup(){closeFull('backupPage');}
 
@@ -1657,19 +1697,31 @@ window.addEventListener('popstate',()=>{
   if(_backPressedOnce){
     clearTimeout(_backTimer);
     _backPressedOnce=false;
-    if(window.navigator.standalone||window.matchMedia('(display-mode:standalone)').matches){
+    // Capacitor: use App plugin; fallback: window close
+    if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
+      window.Capacitor.Plugins.App.exitApp();
+    } else {
       window.close();
+      // PWA standalone fallback
+      history.go(-(history.length));
     }
     return;
   }
   _backPressedOnce=true;
-  // Push a new state so next back press fires popstate again
   history.pushState({p:'exit'},'',location.href);
   toast('Press back again to exit');
-  _backTimer=setTimeout(()=>{
-    _backPressedOnce=false;
-  },2500);
+  _backTimer=setTimeout(()=>{_backPressedOnce=false;},2500);
 });
+
+// Capacitor hardware back button support
+if(window.Capacitor){
+  document.addEventListener('backbutton',function(e){
+    e.preventDefault();
+    // Reuse same popstate logic via manual trigger
+    const evt=new PopStateEvent('popstate',{state:history.state});
+    window.dispatchEvent(evt);
+  },false);
+}
 // Initial history state push taaki popstate kaam kare
 // 2 states push karo — pehla back popstate fire karega, dusra exit
 history.pushState({p:1},'',location.href);
