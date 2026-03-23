@@ -80,7 +80,6 @@ html,body{height:100%;height:100dvh;background:var(--primary);color:var(--text);
 @keyframes fadeIn{from{opacity:0;transform:translate3d(0,12px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
 @keyframes pageIn{from{opacity:0;transform:translate3d(100%,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
 @keyframes pageOut{from{opacity:1;transform:translate3d(0,0,0)}to{opacity:0;transform:translate3d(-28%,0,0)}}
-@keyframes calIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @keyframes popIn{0%{opacity:0;transform:scale3d(.82,.82,1)}65%{transform:scale3d(1.03,1.03,1)}100%{opacity:1;transform:scale3d(1,1,1)}}
 @keyframes shake{0%,100%{transform:translate3d(0,0,0)}25%,75%{transform:translate3d(-7px,0,0)}50%{transform:translate3d(7px,0,0)}}
 @keyframes sheetUp{from{transform:translate3d(0,100%,0)}to{transform:translate3d(0,0,0)}}
@@ -307,9 +306,8 @@ select:-webkit-autofill {
     <div style="display:flex;align-items:center;flex:1;gap:4px;">
       <span class="topbar-title" id="topbarTitle">Self Attendance</span>
     </div>
-    <div style="display:flex;align-items:center;gap:2px;" id="topbarRight">
+    <div style="display:flex;gap:2px;" id="topbarRight">
       <button class="icon-btn" onclick="showSearch()" id="btnSearch"><span class="material-icons-round">search</span></button>
-      <div id="homeAvatarBtn" style="display:none;margin:0 4px;cursor:pointer" onclick="avatarTap()"></div>
       <button class="icon-btn" onclick="showMenu()" id="btnMenu"><span class="material-icons-round">more_vert</span></button>
     </div>
   </div>
@@ -495,33 +493,31 @@ select:-webkit-autofill {
         <div style="flex:1;height:1px;background:var(--border)"></div>
       </div>
 
-      <!-- Local backup card — same layout as Google card -->
+      <!-- Data summary -->
+      <div id="backupSummary" style="background:var(--card);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.9;border:1px solid var(--border)"></div>
+
+      <!-- Local backup + restore in one card -->
       <div style="background:var(--card);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border)">
-        <!-- Header row -->
-        <div style="display:flex;align-items:center;gap:14px;padding:16px">
-          <div style="width:44px;height:44px;border-radius:50%;background:#e8f5e9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <span class="material-icons-round" style="color:#2e7d32;font-size:22px">folder</span>
+        <button onclick="doBackup()" style="display:flex;align-items:center;gap:14px;padding:16px;width:100%;background:transparent;border:none;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s">
+          <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:#e8f5e9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span class="material-icons-round" style="color:#2e7d32;font-size:22px">save_alt</span>
           </div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:15px;font-weight:700;color:var(--text)">Local Storage</div>
+          <div style="flex:1;text-align:left">
+            <div style="font-size:15px;font-weight:700;color:var(--text)">Save backup file</div>
             <div style="font-size:12px;color:var(--text2);margin-top:1px" id="lastBackupLbl">No backup taken yet</div>
           </div>
-        </div>
-        <!-- Data summary -->
-        <div id="backupSummary" style="margin:0 16px 12px;background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.8"></div>
-        <!-- Action buttons — same grid as Google -->
-        <div style="border-top:1px solid var(--border)">
-          <div style="display:grid;grid-template-columns:1fr 1fr">
-            <button onclick="doBackup()" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;background:transparent;border:none;cursor:pointer;border-right:1px solid var(--border)">
-              <span class="material-icons-round" style="font-size:26px;color:#2e7d32">save_alt</span>
-              <span style="font-size:13px;font-weight:700;color:var(--text)">Back up</span>
-            </button>
-            <button onclick="document.getElementById('fileIn').click()" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;background:transparent;border:none;cursor:pointer">
-              <span class="material-icons-round" style="font-size:26px;color:#1565c0">upload_file</span>
-              <span style="font-size:13px;font-weight:700;color:var(--text)">Restore</span>
-            </button>
+          <span class="material-icons-round" style="color:var(--text3)">chevron_right</span>
+        </button>
+        <button onclick="document.getElementById('fileIn').click()" style="display:flex;align-items:center;gap:14px;padding:16px;width:100%;background:transparent;border:none;cursor:pointer;transition:background .15s">
+          <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:#e3f2fd;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span class="material-icons-round" style="color:#1565c0;font-size:22px">upload_file</span>
           </div>
-        </div>
+          <div style="flex:1;text-align:left">
+            <div style="font-size:15px;font-weight:700;color:var(--text)">Restore from file</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:1px">Choose a .json backup file</div>
+          </div>
+          <span class="material-icons-round" style="color:var(--text3)">chevron_right</span>
+        </button>
       </div>
 
     </div>
@@ -533,53 +529,21 @@ select:-webkit-autofill {
       <button class="icon-btn" onclick="closeFull('aboutPage')"><span class="material-icons-round">arrow_back</span></button>
       <div class="topbar-title">About</div>
     </div>
-    <div style="overflow-y:auto;flex:1">
-      <!-- Hero -->
-      <div style="background:linear-gradient(160deg,var(--primary) 0%,var(--primary-light) 100%);padding:36px 24px 28px;text-align:center;position:relative;overflow:hidden">
-        <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.07)"></div>
-        <div style="position:absolute;bottom:-30px;left:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
-        <div style="width:80px;height:80px;border-radius:20px;margin:0 auto 16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.25)">
-          <canvas id="aboutIconCanvas" width="80" height="80" style="width:80px;height:80px;display:block"></canvas>
-        </div>
-        <div style="font-size:26px;font-weight:900;color:#fff;font-family:'Space Grotesk',sans-serif;letter-spacing:-.5px">Self Attendance</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.7);margin-top:6px">by Aashish Giri</div>
-      </div>
-      <!-- Features -->
-      <div style="padding:16px 16px 0">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Features</div>
-        <div style="background:var(--card);border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border)">
-          <div class="about-item">
-            <div style="width:38px;height:38px;border-radius:10px;background:var(--primary-container);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="material-icons-round" style="color:var(--primary);font-size:20px">today</span></div>
-            <div><div style="font-size:14px;font-weight:700">Daily Attendance</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Mark Present, Absent, Leave & Holiday</div></div>
-          </div>
-          <div class="about-item">
-            <div style="width:38px;height:38px;border-radius:10px;background:#e8f5e9;display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="material-icons-round" style="color:#2e7d32;font-size:20px">bar_chart</span></div>
-            <div><div style="font-size:14px;font-weight:700">Reports</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Monthly stats & CSV export</div></div>
-          </div>
-          <div class="about-item">
-            <div style="width:38px;height:38px;border-radius:10px;background:#e3f2fd;display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="material-icons-round" style="color:#1565c0;font-size:20px">cloud_sync</span></div>
-            <div><div style="font-size:14px;font-weight:700">Google Backup</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Sync data via Google account</div></div>
-          </div>
-          <div class="about-item" style="border-bottom:none">
-            <div style="width:38px;height:38px;border-radius:10px;background:#f3e5f5;display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="material-icons-round" style="color:#6a1b9a;font-size:20px">dark_mode</span></div>
-            <div><div style="font-size:14px;font-weight:700">Dark Mode</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Eye-friendly theme support</div></div>
-          </div>
-        </div>
-      </div>
-      <!-- Developer -->
-      <div style="padding:16px">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Developer</div>
-        <div style="background:var(--card);border-radius:var(--radius-lg);padding:16px;border:1px solid var(--border);display:flex;align-items:center;gap:14px">
-          <div style="width:44px;height:44px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0;font-family:'Space Grotesk',sans-serif">A</div>
-          <div>
-            <div style="font-size:15px;font-weight:700;color:var(--text)">Aashish Giri</div>
-            <div style="font-size:12px;color:var(--text2);margin-top:2px">All rights reserved</div>
-          </div>
-        </div>
-      </div>
-      <div style="text-align:center;padding:8px 16px 32px;font-size:12px;color:var(--text3)">Data stored locally on your device</div>
+  <div style="overflow-y:auto;flex:1">
+    <div class="about-header">
+      <div class="about-logo"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg></div>
+      <div class="about-appname">Self Attendance</div>
+      <div style="font-size:13px;opacity:.8;margin-top:4px">Version 2.0.0 • Web Edition</div>
     </div>
-  </div><!-- end aboutPage -->
+    <div style="background:var(--card);margin:12px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)">
+      <div class="about-item"><span class="material-icons-round" style="color:var(--primary)">check_circle</span><div><div style="font-weight:700">Track Attendance</div><div style="font-size:13px;color:var(--text2)">Mark P/A/Leave/Holiday for any subject</div></div></div>
+      <div class="about-item"><span class="material-icons-round" style="color:#2e7d32">bar_chart</span><div><div style="font-weight:700">Reports & Analytics</div><div style="font-size:13px;color:var(--text2)">CSV exports & sharing</div></div></div>
+      <div class="about-item"><span class="material-icons-round" style="color:#1565c0">backup</span><div><div style="font-weight:700">Local Backup</div><div style="font-size:13px;color:var(--text2)">Save & restore data anytime</div></div></div>
+      <div class="about-item"><span class="material-icons-round" style="color:#6a1b9a">dark_mode</span><div><div style="font-weight:700">Dark Mode</div><div style="font-size:13px;color:var(--text2)">Eye-friendly dark theme</div></div></div>
+    </div>
+    <div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">All data stored locally on your device</div>
+  </div>
+</div><!-- end aboutPage -->
 <!-- Mini Date Picker for By Date -->
 <div class="mini-cal-overlay" id="miniCalOverlay" onclick="if(event.target===this)closeMiniCal()">
   <div class="mini-cal-box">
@@ -670,6 +634,7 @@ select:-webkit-autofill {
 
 <div class="toast" id="toast"></div>
 <input type="file" id="fileIn" accept=".json" onchange="doRestore(this)" style="display:none" autocomplete="off">
+<input type="date" id="dateIn" style="display:none" onchange="setDate(this.value)" autocomplete="off">
 </div><!-- end #app -->
 
 <script>
@@ -719,11 +684,7 @@ function save(){
     localStorage.setItem('sa_app', str);
     localStorage.setItem('sa_d', JSON.stringify(D));
     localStorage.setItem('sa_s', JSON.stringify(S));
-    console.log('[SA] Saved:', D.subjects.length, 'subjects,', Object.keys(D.attendance).length, 'attendance records');
-  }catch(e){ 
-    console.error('[SA] Save failed:',e);
-    toast('⚠️ Save error! Data might be lost');
-  }
+  }catch(e){ console.warn('Save failed:',e); }
 }
 
 function load(){
@@ -740,7 +701,6 @@ function load(){
       }
       // Ensure attendance map exists for all subjects
       if(D.subjects) D.subjects.forEach(s=>{ if(!D.attendance[s.id]) D.attendance[s.id]=[]; });
-      console.log('[SA] Loaded:', D.subjects.length, 'subjects');
       return;
     }
     // Legacy fallback
@@ -749,11 +709,7 @@ function load(){
     const s = localStorage.getItem('sa_s');
     if(s) S = Object.assign(S, JSON.parse(s));
     if(D.subjects) D.subjects.forEach(sub=>{ if(!D.attendance[sub.id]) D.attendance[sub.id]=[]; });
-    console.log('[SA] Legacy load:', D.subjects.length, 'subjects');
-  }catch(e){ 
-    console.error('[SA] Load failed:',e);
-    setTimeout(()=>toast('⚠️ Data load error! Check console'),500);
-  }
+  }catch(e){ console.warn('Load failed:',e); }
 }
 
 // =========================================
@@ -798,9 +754,7 @@ function applyS(){
 // NAVIGATION
 // =========================================
 function switchTab(t){
-  if(tab===t)return;
-  const wasHome=(tab==='home');
-  tab=t;
+  if(tab===t)return;tab=t;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+t).classList.add('active');
@@ -809,8 +763,6 @@ function switchTab(t){
   document.getElementById('btnSearch').style.display=t==='home'?'':'none';
   document.getElementById('btnMenu').style.display=t!=='settings'?'':'none';
   document.getElementById('mainFab').style.display=t==='home'?'':'none';
-  // Push history so Android back button returns to home
-  if(t!=='home') history.pushState({tab:t},'',location.href);
   hideSearch();
   if(t==='home')renderHome();
   else if(t==='bydate')renderByDate();
@@ -878,6 +830,7 @@ function sdView(v){curView=v;renderSD();}
 function renderSD(){
   const s=D.subjects.find(x=>x.id===curSub);if(!s)return;
   document.getElementById('sdBody').innerHTML=curView==='cal'?renderCalView(s):renderListView(s);
+  if(curView==='cal')setTimeout(animateCal,50);
 }
 
 function renderCalView(s){
@@ -953,7 +906,18 @@ function renderListView(s){
   }).join('')}</div>`;
 }
 
-function animateCal(){} // animation removed — instant render
+function animateCal(){
+  document.querySelectorAll('.cal-day:not(.empty)').forEach((d,i)=>{
+    d.style.opacity='0';
+    d.style.transform='scale(0.5)';
+    d.style.transition='none';
+    setTimeout(()=>{
+      d.style.transition=`opacity .25s ease, transform .35s cubic-bezier(.34,1.56,.64,1)`;
+      d.style.opacity='1';
+      d.style.transform='scale(1)';
+    }, 20 + i*10);
+  });
+}
 function chM(dir){sdM+=dir;if(sdM<0){sdM=11;sdY--;}if(sdM>11){sdM=0;sdY++;}renderSD();}
 
 // =========================================
@@ -1106,36 +1070,17 @@ function filterReport(t,btn){
   btn.classList.add('active');
 }
 
-let _mpSelM=0,_mpSelY=new Date().getFullYear();
-
 function showMonthPicker(){
-  _mpSelM=rptM; _mpSelY=rptY;
-  renderMpGrid();
+  const sm=document.getElementById('mpMonth'),sy=document.getElementById('mpYear');
+  sm.value=rptM;sy.innerHTML='';
+  const cy=new Date().getFullYear();
+  for(let y=cy-3;y<=cy+1;y++)sy.innerHTML+=`<option value="${y}" ${y===rptY?'selected':''}>${y}</option>`;
   openSheet('mPickSheet');
 }
-
-function renderMpGrid(){
-  document.getElementById('mpYearVal').textContent=_mpSelY;
-  const MNAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('mpMonthGrid').innerHTML=MNAMES.map((m,i)=>
-    `<div class="mp-cell${i===_mpSelM?' active':''}" onclick="mpSelMonth(${i})">${m}</div>`
-  ).join('');
-}
-
-function mpSelMonth(i){
-  _mpSelM=i;
-  document.querySelectorAll('.mp-cell').forEach((el,idx)=>el.classList.toggle('active',idx===i));
-}
-
-function mpNavYear(dir){
-  const cy=new Date().getFullYear();
-  _mpSelY=Math.max(2020,Math.min(cy+1,_mpSelY+dir));
-  renderMpGrid();
-}
-
 function applyMonth(){
-  rptM=_mpSelM; rptY=_mpSelY;
-  closeSheet('mPickSheet'); renderReports();
+  rptM=parseInt(document.getElementById('mpMonth').value);
+  rptY=parseInt(document.getElementById('mpYear').value);
+  closeSheet('mPickSheet');renderReports();
 }
 
 // =========================================
@@ -1172,14 +1117,8 @@ function shareRpt(id){
   const att=D.attendance[id]||[];
   const withRemarks=att.filter(a=>a.n&&a.n.trim()).length;
   const txt=` Attendance - ${s.name}\n Present: ${st.present}\n Absent: ${st.absent}\n Holiday: ${st.holiday}\n Leave: ${st.leave}\n Percentage: ${pct}%`;
-  // Capacitor Share plugin or Web Share API
-  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Share){
-    window.Capacitor.Plugins.Share.share({title:s.name+' Attendance',text:txt,dialogTitle:'Share Attendance'}).catch(()=>clip(txt));
-  } else if(navigator.share){
-    navigator.share({title:s.name+' Attendance',text:txt}).catch(()=>clip(txt));
-  } else {
-    clip(txt);
-  }
+  if(navigator.share)navigator.share({title:s.name+' Attendance',text:txt}).catch(()=>clip(txt));
+  else{clip(txt);toast('Copied to clipboard!');}
 }
 
 // =========================================
@@ -1386,13 +1325,7 @@ function getWeeklyOffForMonth(year, month){
   }
   return S.weeklyOff||0;
 }
-function openAbout(){
-  openFull('aboutPage');
-  requestAnimationFrame(()=>{
-    const cv=document.getElementById('aboutIconCanvas');
-    if(cv){const ctx=cv.getContext('2d');const img=new Image();img.onload=()=>ctx.drawImage(img,0,0,80,80);img.src=makeIconPng(80);}
-  });
-}
+function openAbout(){openFull('aboutPage');}
 function openBackupPage(){
   const lbl=localStorage.getItem('sa_lastBk');
   document.getElementById('lastBackupLbl').textContent=lbl?`Last backup: ${lbl}`:'No backup taken yet';
@@ -1400,17 +1333,16 @@ function openBackupPage(){
   D.subjects.forEach(s=>{totalRec+=(D.attendance[s.id]||[]).length;});
   const sum=document.getElementById('backupSummary');
   if(sum){
-    sum.innerHTML=`<b>${D.subjects.length}</b> Subject(s) &nbsp;|&nbsp; <b>${totalRec}</b> Records<br>`+
+    sum.innerHTML=
+      `<b>${D.subjects.length}</b> Subject(s) &nbsp;|&nbsp; <b>${totalRec}</b> Records<br>`+
       `Dark: <b>${S.dark?'ON':'OFF'}</b> &nbsp;|&nbsp; Target: <b>${S.targetPct}%</b> &nbsp;|&nbsp; Weekly Off: <b>${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][S.weeklyOff]}</b>`;
   }
-  const gLbl=localStorage.getItem('sa_gLastBk');
-  const gSync=document.getElementById('gSyncStatus');
-  if(gSync) gSync.textContent=gLbl?'Last Google backup: '+gLbl:'';
+  // Show Google last backup time
+  const gLbl = localStorage.getItem('sa_gLastBk');
+  const gSync = document.getElementById('gSyncStatus');
+  if(gSync) gSync.textContent = gLbl ? 'Last Google backup: '+gLbl : '';
   openFull('backupPage');
 }
-
-// Unified backup — opens dialog if Google logged in
-function openUnifiedBackup(){ openBackupPage(); }
 function closeBackup(){closeFull('backupPage');}
 
 // =========================================
@@ -1577,36 +1509,31 @@ function pad(n){return String(n).padStart(2,'0');}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 async function dlFile(name, content, mime){
   const blob = new Blob([content], {type: mime});
-  // Capacitor: use Filesystem plugin if available
-  if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem){
+  // Try modern File System Access API — shows native Save dialog
+  if(window.showSaveFilePicker){
     try{
-      const {Filesystem,Directory} = window.Capacitor.Plugins;
-      const base64 = await blobToBase64(blob);
-      await Filesystem.writeFile({
-        path: name,
-        data: base64,
-        directory: Directory.Documents,
-        recursive: true
-      });
-      toast('Saved to Documents: ' + name);
+      const ext = name.split('.').pop();
+      const types = [{
+        description: ext.toUpperCase() + ' File',
+        accept: {[mime]: ['.'+ext]}
+      }];
+      const fh = await window.showSaveFilePicker({suggestedName: name, types});
+      const writable = await fh.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      toast('File saved to device!');
       return;
-    } catch(e){ console.warn('Capacitor FS failed:',e); }
+    } catch(e){
+      if(e.name === 'AbortError') return; // user cancelled
+      // fall through to download
+    }
   }
-  // Web fallback — blob download
+  // Fallback — standard download (saves to Downloads folder)
   const u = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = u; a.download = name; a.click();
   URL.revokeObjectURL(u);
-  toast('File downloaded');
-}
-
-function blobToBase64(blob){
-  return new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=()=>res(r.result.split(',')[1]);
-    r.onerror=rej;
-    r.readAsDataURL(blob);
-  });
+  toast('Saved to Downloads folder');
 }
 function clip(t){
   navigator.clipboard.writeText(t).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');document.body.removeChild(a);});
@@ -1730,31 +1657,19 @@ window.addEventListener('popstate',()=>{
   if(_backPressedOnce){
     clearTimeout(_backTimer);
     _backPressedOnce=false;
-    // Capacitor: use App plugin; fallback: window close
-    if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
-      window.Capacitor.Plugins.App.exitApp();
-    } else {
+    if(window.navigator.standalone||window.matchMedia('(display-mode:standalone)').matches){
       window.close();
-      // PWA standalone fallback
-      history.go(-(history.length));
     }
     return;
   }
   _backPressedOnce=true;
+  // Push a new state so next back press fires popstate again
   history.pushState({p:'exit'},'',location.href);
   toast('Press back again to exit');
-  _backTimer=setTimeout(()=>{_backPressedOnce=false;},2500);
+  _backTimer=setTimeout(()=>{
+    _backPressedOnce=false;
+  },2500);
 });
-
-// Capacitor hardware back button support
-if(window.Capacitor){
-  document.addEventListener('backbutton',function(e){
-    e.preventDefault();
-    // Reuse same popstate logic via manual trigger
-    const evt=new PopStateEvent('popstate',{state:history.state});
-    window.dispatchEvent(evt);
-  },false);
-}
 // Initial history state push taaki popstate kaam kare
 // 2 states push karo — pehla back popstate fire karega, dusra exit
 history.pushState({p:1},'',location.href);
@@ -2089,28 +2004,57 @@ document.addEventListener('DOMContentLoaded', function(){
 // Project: Aashish Giri's existing Firestore project
 // ═══════════════════════════════════════════════════════
 // Guard: run Firebase init only when SDK is available
-// ── Firebase global variables ──
-let fbApp, fbAuth, fbDb, gUser = null;
+function initFirebase(){
+  if(typeof firebase === 'undefined'){
+    // Retry after short delay (offline / slow load)
+    setTimeout(initFirebase, 300);
+    return;
+  }
+const FB_CONFIG = (()=>{
+  // Config is obfuscated — Firestore security rules enforce access control
+  const _a = ['AIzaSyApVZ0wN8eIZKO9ys7CkpVHwBZ1P7q6ztE','officedesk-6c56e.firebaseapp.com','officedesk-6c56e','officedesk-6c56e.firebasestorage.app','342843064222','1:342843064222:web:b4e81090796664bf39608f'];
+  return {apiKey:_a[0],authDomain:_a[1],projectId:_a[2],storageBucket:_a[3],messagingSenderId:_a[4],appId:_a[5]};
+})();
 
-// ── All Firebase/Auth functions — global scope ──
-function updateAuthUI(user){
-  localStorage.removeItem('sa_guser_cached');
-  // Update home topbar avatar
-  const hab=document.getElementById('homeAvatarBtn');
-  if(hab){
-    if(user){
-      hab.style.display='block';
-      if(user.photoURL){
-        hab.innerHTML=`<img src="${user.photoURL}" style="width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.6);object-fit:cover;display:block">`;
-      } else {
-        const ini=(user.displayName||user.email||'A').charAt(0).toUpperCase();
-        hab.innerHTML=`<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff">${ini}</div>`;
-      }
+// Initialize Firebase (only once)
+let fbApp, fbAuth, fbDb;
+try {
+  fbApp = firebase.app();
+} catch(e) {
+  fbApp = firebase.initializeApp(FB_CONFIG);
+}
+fbAuth = firebase.auth();
+fbDb   = firebase.firestore();
+
+// Access control is handled by Firestore security rules — no email list needed here
+let gUser = null;
+fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+fbAuth.onAuthStateChanged(user => {
+  if(user){
+    gUser = user;
+    localStorage.setItem('sa_guser', JSON.stringify({
+      email: user.email,
+      name: user.displayName,
+      photo: user.photoURL
+    }));
+    updateAuthUI(user);
+  } else {
+    gUser = null;
+    // Try to restore from localStorage (for display only)
+    const cached = localStorage.getItem('sa_guser');
+    if(cached){
+      const cu = JSON.parse(cached);
+      // Show cached but mark as needing re-auth
+      updateAuthUICached(cu);
     } else {
-      hab.style.display='none';
-      hab.innerHTML='';
+      updateAuthUI(null);
     }
   }
+});
+
+function updateAuthUI(user){
+  localStorage.removeItem('sa_guser_cached');
   const signInArea = document.getElementById('gSignInArea');
   const backupArea  = document.getElementById('gBackupArea');
   const signOutBtn  = document.getElementById('gSignOutBtn');
@@ -2174,17 +2118,8 @@ async function gSignIn(){
   }
 }
 
-async function avatarTap(){
-  if(!gUser) return;
-  const name = gUser.displayName || gUser.email;
-  if(await confirm2('Sign Out?', `Signed in as ${name}. Sign out?`, false)){
-    await gSignOut(true);
-  }
-}
-async function gSignOut(skipConfirm=false){
-  if(!skipConfirm){
-    if(!await confirm2('Sign Out?','You will be signed out of Google. Local data stays safe.',false)) return;
-  }
+async function gSignOut(){
+  if(!await confirm2('Sign Out?', 'You will be signed out of Google. Local data stays safe.',false)) return;
   localStorage.removeItem('sa_guser');
   await fbAuth.signOut();
   gUser = null;
@@ -2193,36 +2128,6 @@ async function gSignOut(skipConfirm=false){
 }
 
 // ── Google Backup — save to Firestore ──
-
-// ── initFirebase — called after SDK loads ──
-function initFirebase(){
-  if(typeof firebase === 'undefined'){
-    setTimeout(initFirebase, 300);
-    return;
-  }
-  const FB_CONFIG = (()=>{
-    const _a = ['AIzaSyApVZ0wN8eIZKO9ys7CkpVHwBZ1P7q6ztE','officedesk-6c56e.firebaseapp.com','officedesk-6c56e','officedesk-6c56e.firebasestorage.app','342843064222','1:342843064222:web:b4e81090796664bf39608f'];
-    return {apiKey:_a[0],authDomain:_a[1],projectId:_a[2],storageBucket:_a[3],messagingSenderId:_a[4],appId:_a[5]};
-  })();
-  try { fbApp = firebase.app(); } catch(e) { fbApp = firebase.initializeApp(FB_CONFIG); }
-  fbAuth = firebase.auth();
-  fbDb   = firebase.firestore();
-  fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-  fbAuth.onAuthStateChanged(user => {
-    if(user){
-      gUser = user;
-      localStorage.setItem('sa_guser', JSON.stringify({email:user.email,name:user.displayName,photo:user.photoURL}));
-      updateAuthUI(user);
-    } else {
-      gUser = null;
-      const cached = localStorage.getItem('sa_guser');
-      if(cached){ updateAuthUICached(JSON.parse(cached)); }
-      else { updateAuthUI(null); }
-    }
-  });
-}
-
-// Google backup/restore — global scope so HTML buttons can call them
 async function doGoogleBackup(){
   if(!gUser){ toast('Sign in first'); return; }
   const statusEl = document.getElementById('gSyncStatus');
@@ -2297,6 +2202,7 @@ setTimeout(()=>{
   const f=document.getElementById('mainFab');
   f.style.animation='fabIn .5s cubic-bezier(.34,1.56,.64,1) .3s both';
 },100);
+} // end initFirebase
 </script>
 </body>
 </html>
