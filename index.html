@@ -1656,20 +1656,26 @@ window.addEventListener('popstate',()=>{
   if(document.getElementById('searchWrap').style.display!=='none'){hideSearch();history.pushState(null,'',location.href);return;}
   if(tab!=='home'){switchTab('home');history.pushState(null,'',location.href);return;}
   // On home tab — double back to exit
-  history.pushState(null,'',location.href); // keep state so next back triggers popstate again
   if(_backPressedOnce){
-    clearTimeout(_backTimer);_backPressedOnce=false;
+    clearTimeout(_backTimer);
+    _backPressedOnce=false;
     if(window.navigator.standalone||window.matchMedia('(display-mode:standalone)').matches){
       window.close();
     }
     return;
   }
   _backPressedOnce=true;
+  // Push a new state so next back press fires popstate again
+  history.pushState({p:'exit'},'',location.href);
   toast('Press back again to exit');
-  _backTimer=setTimeout(()=>{_backPressedOnce=false;},2500);
+  _backTimer=setTimeout(()=>{
+    _backPressedOnce=false;
+  },2500);
 });
 // Initial history state push taaki popstate kaam kare
-history.pushState(null,'',location.href);
+// 2 states push karo — pehla back popstate fire karega, dusra exit
+history.pushState({p:1},'',location.href);
+history.pushState({p:2},'',location.href);
 
 // ── Swipe gestures — Mobile ──
 let lt=0;
