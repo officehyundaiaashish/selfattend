@@ -108,7 +108,12 @@ html,body{height:100%;height:100dvh;background:var(--primary);color:var(--text);
 @keyframes fadeIn{from{opacity:0;transform:translate3d(0,12px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
 @keyframes pageIn{from{opacity:0;transform:translate3d(100%,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
 @keyframes pageOut{from{opacity:1;transform:translate3d(0,0,0)}to{opacity:0;transform:translate3d(-28%,0,0)}}
-@keyframes popIn{0%{opacity:0;transform:scale3d(.82,.82,1)}65%{transform:scale3d(1.03,1.03,1)}100%{opacity:1;transform:scale3d(1,1,1)}}
+@keyframes popIn{0%{opacity:0;transform:scale3d(.94,.94,1)}100%{opacity:1;transform:scale3d(1,1,1)}}
+@keyframes calShine{
+  0%{background-position:-120% center;}
+  50%{background-position:220% center;}
+  100%{background-position:220% center;}
+}
 @keyframes shake{0%,100%{transform:translate3d(0,0,0)}25%,75%{transform:translate3d(-7px,0,0)}50%{transform:translate3d(7px,0,0)}}
 @keyframes sheetUp{from{transform:translate3d(0,100%,0)}to{transform:translate3d(0,0,0)}}
 @keyframes dropDown{from{opacity:0;transform:translate3d(0,-8px,0) scale3d(.96,.96,1)}to{opacity:1;transform:translate3d(0,0,0) scale3d(1,1,1)}}
@@ -169,11 +174,12 @@ select:-webkit-autofill {
 .cal-day.empty{pointer-events:none;}
 .cal-day.today{border:2px solid var(--primary);}
 .cal-day.s-P{background:#1b5e20;color:#fff;font-weight:900;}
-.cal-day.s-A{background:#b71c1c;color:#ffeb3b;font-weight:900;}
+.cal-day.s-A{background:#b71c1c;color:#ffeb3b;font-weight:900;background-image:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.22) 50%,transparent 65%);background-size:250% 100%;animation:calShine 3.5s ease-in-out 1.2s infinite;}
 .cal-day.s-H{background:#1565c0;color:#fff;font-weight:900;}
-.cal-day.s-L{background:#e65100;color:#fff;font-weight:900;}
-.cal-day.s-HD{background:#6a1b9a;color:#fff;font-weight:900;}
-.cal-day.s-POT,.cal-day.s-AOT{background:#283593;color:#fff;font-weight:900;}
+.cal-day.s-L{background:#e65100;color:#fff;font-weight:900;background-image:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.20) 50%,transparent 65%);background-size:250% 100%;animation:calShine 3.5s ease-in-out 1.6s infinite;}
+.cal-day.s-HD{background:#6a1b9a;color:#fff;font-weight:900;background-image:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.20) 50%,transparent 65%);background-size:250% 100%;animation:calShine 3.5s ease-in-out 2s infinite;}
+.cal-day.s-POT{background:#283593;color:#fff;font-weight:900;}
+.cal-day.s-AOT{background:#283593;color:#fff;font-weight:900;background-image:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.18) 50%,transparent 65%);background-size:250% 100%;animation:calShine 3.5s ease-in-out 2.4s infinite;}
 .cal-day.has-remark::after{content:'';position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;background:#fff;border:1.5px solid rgba(0,0,0,.3);box-shadow:0 0 0 1px rgba(255,255,255,.5);}
 .cal-day.s-P.has-remark::after,.cal-day.s-A.has-remark::after,.cal-day.s-H.has-remark::after,.cal-day.s-L.has-remark::after,.cal-day.s-HD.has-remark::after{background:#fff176;border-color:rgba(0,0,0,.4);}
 .cal-day.wo-day{background:var(--border);color:var(--text2);position:relative;font-size:9px;flex-direction:column;gap:0;line-height:1;}
@@ -454,7 +460,7 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-i
           <div class="settings-group-label">Data</div>
           <div class="settings-item" onclick="openBackupPage()">
             <div class="settings-icon" style="background:#e8f5e9"><span class="material-icons-round" style="color:#2e7d32">backup</span></div>
-            <div class="settings-text"><div class="settings-label">Backup & Restore</div><div class="settings-value">Local file backup</div></div>
+            <div class="settings-text"><div class="settings-label">Backup & Restore</div><div class="settings-value">Local &amp; Cloud backup</div></div>
             <span class="material-icons-round" style="color:var(--text3)">chevron_right</span>
           </div>
         </div>
