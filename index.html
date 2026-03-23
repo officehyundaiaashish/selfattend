@@ -1065,7 +1065,7 @@ function renderStatusGrid(){
     </button>`).join('');
 }
 
-function selSt(k){selStatus=(k==='X')?null:k;renderStatusGrid();}
+function selSt(k){selStatus=k;renderStatusGrid();}
 
 function saveAtt(){
   if(!markCtx)return;
@@ -1077,7 +1077,7 @@ function saveAtt(){
   else if(idx!==-1)D.attendance[id][idx]={date,s:selStatus,n};
   else D.attendance[id].push({date,s:selStatus,n});
   save();closeSheet('markSheet');_skipCalAnim=true;renderSD();renderByDate();
-  toast(selStatus?`Marked as ${selStatus}`:'Attendance cleared');
+  toast(selStatus&&selStatus!=='X'?`Marked as ${selStatus}`:'Attendance cleared');
 }
 
 // =========================================
