@@ -261,6 +261,24 @@ select:-webkit-autofill {
 .about-appname{font-size:24px;font-weight:900;font-family:'Space Grotesk',sans-serif;}
 .about-item{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);}
 .about-item:last-child{border-bottom:none;}
+
+.mini-cal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-start;justify-content:center;padding-top:120px;}
+.mini-cal-overlay.open{display:flex;}
+.mini-cal-box{background:var(--card);border-radius:var(--radius-lg);padding:0;width:calc(100% - 48px);max-width:340px;overflow:hidden;animation:popIn .22s cubic-bezier(.34,1.56,.64,1) both;}
+.mini-cal-head{background:var(--primary);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+.mini-cal-title{font-size:16px;font-weight:800;font-family:'Space Grotesk',sans-serif;}
+.mini-cal-nav{background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;}
+.mini-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:8px;}
+.mini-cal-label{text-align:center;font-size:11px;font-weight:700;color:var(--text2);padding:4px 0;}
+.mini-cal-day{aspect-ratio:1;border-radius:50%;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.mini-cal-day:hover,.mini-cal-day:active{background:var(--primary-container);}
+.mini-cal-day.mcd-today{border:2px solid var(--primary);color:var(--primary);font-weight:800;}
+.mini-cal-day.mcd-selected{background:var(--primary);color:#fff;font-weight:800;}
+.mini-cal-day.mcd-has{font-weight:800;}
+.mini-cal-day.mcd-empty{pointer-events:none;}
+.mini-cal-footer{padding:8px 12px 12px;display:flex;justify-content:flex-end;gap:8px;}
+.mini-cal-footer button{padding:8px 18px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-size:13px;font-weight:700;font-family:'Nunito',sans-serif;}
+
 .full-page{display:none;position:absolute;inset:0;z-index:80;background:var(--surface);flex-direction:column;overflow:hidden;will-change:transform,opacity;}
 .alert-banner{margin:0 12px;padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;}
 </style>
@@ -455,6 +473,22 @@ select:-webkit-autofill {
     <div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">All data stored locally on your device</div>
   </div>
 </div><!-- end aboutPage -->
+<!-- Mini Date Picker for By Date -->
+<div class="mini-cal-overlay" id="miniCalOverlay" onclick="if(event.target===this)closeMiniCal()">
+  <div class="mini-cal-box">
+    <div class="mini-cal-head">
+      <button class="mini-cal-nav" onclick="miniCalNav(-1)">&#8249;</button>
+      <span class="mini-cal-title" id="miniCalTitle"></span>
+      <button class="mini-cal-nav" onclick="miniCalNav(1)">&#8250;</button>
+    </div>
+    <div class="mini-cal-grid" id="miniCalGrid"></div>
+    <div class="mini-cal-footer">
+      <button style="background:var(--surface2);color:var(--text2)" onclick="closeMiniCal()">Cancel</button>
+      <button style="background:var(--primary);color:#fff" onclick="miniCalToday()">Today</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- SHEETS (inside #app) -->
 <div class="overlay" id="weeklyOffSheet" onclick="bgClose(this,event)">
@@ -691,7 +725,7 @@ function renderHome(filter=''){
     const circ=2*Math.PI*18,dash=circ-(pct/100)*circ;
     return `<div class="subject-card" onclick="openSub('${s.id}')" oncontextmenu="subLongPress(event,'${s.id}')" ontouchstart="startLongPress(event,'${s.id}')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()" style="animation:popIn .42s cubic-bezier(.34,1.56,.64,1) ${i*.07}s both">
       <div class="sub-circle">${s.code||s.name[0].toUpperCase()}</div>
-      <div class="sub-info"><div class="sub-name">${esc(s.name)}</div><div class="sub-stats">P:${st.present} A:${st.absent} H:${st.holiday} L:${st.leave} HD:${st.halfday}</div></div>
+      <div class="sub-info"><div class="sub-name">${esc(s.name)}</div><div class="sub-stats">${st.total} working days &nbsp;·&nbsp; ${st.present} present</div></div>
       <div class="progress-ring"><svg width="44" height="44" viewBox="0 0 44 44"><circle class="ring-bg" cx="22" cy="22" r="18"/><circle class="ring-fill" cx="22" cy="22" r="18" stroke="${col}" stroke-dasharray="${circ}" stroke-dashoffset="${dash}"/></svg><div class="ring-text" style="color:${col}">${pct}%</div></div>
     </div>`;
   }).join('');
@@ -880,8 +914,51 @@ function navDate(d){
   else bDate=new Date(bDate.getTime()+d*86400000);
   renderByDate();
 }
-function pickBydateDate(){document.getElementById('dateIn').value=fmtDate(bDate);document.getElementById('dateIn').click();}
+function pickBydateDate(){
+  miniCalM=bDate.getMonth();
+  miniCalY=bDate.getFullYear();
+  renderMiniCal();
+  document.getElementById('miniCalOverlay').classList.add('open');
+}
 function setDate(v){if(!v)return;bDate=new Date(v+'T00:00:00');renderByDate();}
+function closeMiniCal(){document.getElementById('miniCalOverlay').classList.remove('open');}
+function miniCalToday(){bDate=new Date();renderByDate();closeMiniCal();}
+
+let miniCalM=new Date().getMonth(), miniCalY=new Date().getFullYear();
+
+function miniCalNav(dir){
+  miniCalM+=dir;
+  if(miniCalM<0){miniCalM=11;miniCalY--;}
+  if(miniCalM>11){miniCalM=0;miniCalY++;}
+  renderMiniCal();
+}
+
+function renderMiniCal(){
+  document.getElementById('miniCalTitle').textContent=MONTHS[miniCalM]+' '+miniCalY;
+  const fd=new Date(miniCalY,miniCalM,1).getDay();
+  const dim=new Date(miniCalY,miniCalM+1,0).getDate();
+  const tod=fmtDate(new Date());
+  const sel=fmtDate(bDate);
+  const att=curSub?(D.attendance[curSub]||[]):[];
+  const attDates=new Set(att.map(a=>a.date));
+  let html=DAYS.map(d=>`<div class="mini-cal-label">${d}</div>`).join('');
+  for(let i=0;i<fd;i++) html+=`<div class="mini-cal-day mcd-empty"></div>`;
+  for(let d=1;d<=dim;d++){
+    const ds=`${miniCalY}-${pad(miniCalM+1)}-${pad(d)}`;
+    let cls='mini-cal-day';
+    if(ds===tod) cls+=' mcd-today';
+    if(ds===sel) cls+=' mcd-selected';
+    if(attDates.has(ds)) cls+=' mcd-has';
+    html+=`<button class="${cls}" onclick="miniCalPick('${ds}')">${d}</button>`;
+  }
+  document.getElementById('miniCalGrid').innerHTML=html;
+}
+
+function miniCalPick(ds){
+  bDate=new Date(ds+'T00:00:00');
+  renderByDate();
+  closeMiniCal();
+}
 
 // =========================================
 // REPORTS
@@ -1359,9 +1436,33 @@ function toast(msg){
 function fmtDate(d){return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;}
 function pad(n){return String(n).padStart(2,'0');}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function dlFile(name,content,mime){
-  const b=new Blob([content],{type:mime}),u=URL.createObjectURL(b),a=document.createElement('a');
-  a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);
+async function dlFile(name, content, mime){
+  const blob = new Blob([content], {type: mime});
+  // Try modern File System Access API — shows native Save dialog
+  if(window.showSaveFilePicker){
+    try{
+      const ext = name.split('.').pop();
+      const types = [{
+        description: ext.toUpperCase() + ' File',
+        accept: {[mime]: ['.'+ext]}
+      }];
+      const fh = await window.showSaveFilePicker({suggestedName: name, types});
+      const writable = await fh.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      toast('File saved to device!');
+      return;
+    } catch(e){
+      if(e.name === 'AbortError') return; // user cancelled
+      // fall through to download
+    }
+  }
+  // Fallback — standard download (saves to Downloads folder)
+  const u = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = u; a.download = name; a.click();
+  URL.revokeObjectURL(u);
+  toast('Saved to Downloads folder');
 }
 function clip(t){
   navigator.clipboard.writeText(t).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');document.body.removeChild(a);});
