@@ -1974,14 +1974,11 @@ document.addEventListener('DOMContentLoaded', function(){
 // FIREBASE — Google Auth + Firestore Backup
 // Project: Aashish Giri's existing Firestore project
 // ═══════════════════════════════════════════════════════
-const FB_CONFIG = {
-  apiKey: "AIzaSyD_REPLACE_WITH_YOUR_API_KEY",
-  authDomain: "REPLACE.firebaseapp.com",
-  projectId: "REPLACE_PROJECT_ID",
-  storageBucket: "REPLACE.appspot.com",
-  messagingSenderId: "REPLACE",
-  appId: "REPLACE"
-};
+const FB_CONFIG = (()=>{
+  // Config is obfuscated — Firestore security rules enforce access control
+  const _a = ['AIzaSyApVZ0wN8eIZKO9ys7CkpVHwBZ1P7q6ztE','officedesk-6c56e.firebaseapp.com','officedesk-6c56e','officedesk-6c56e.firebasestorage.app','342843064222','1:342843064222:web:b4e81090796664bf39608f'];
+  return {apiKey:_a[0],authDomain:_a[1],projectId:_a[2],storageBucket:_a[3],messagingSenderId:_a[4],appId:_a[5]};
+})();
 
 // Initialize Firebase (only once)
 let fbApp, fbAuth, fbDb;
