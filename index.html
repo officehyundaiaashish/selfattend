@@ -133,12 +133,14 @@ select:-webkit-autofill {
 .cal-day:active{transform:scale(.88);}
 .cal-day.empty{pointer-events:none;}
 .cal-day.today{border:2px solid var(--primary);}
-.cal-day.s-P{background:#2e7d32;color:#fff;font-weight:900;}
-.cal-day.s-A{background:#c62828;color:#fff;font-weight:900;}
+.cal-day.s-P{background:#1b5e20;color:#fff;font-weight:900;}
+.cal-day.s-A{background:#b71c1c;color:#ffeb3b;font-weight:900;}
 .cal-day.s-H{background:#1565c0;color:#fff;font-weight:900;}
 .cal-day.s-L{background:#e65100;color:#fff;font-weight:900;}
 .cal-day.s-HD{background:#6a1b9a;color:#fff;font-weight:900;}
 .cal-day.s-POT,.cal-day.s-AOT{background:#283593;color:#fff;font-weight:900;}
+.cal-day.has-remark::after{content:'';position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;background:#fff;border:1.5px solid rgba(0,0,0,.3);box-shadow:0 0 0 1px rgba(255,255,255,.5);}
+.cal-day.s-P.has-remark::after,.cal-day.s-A.has-remark::after,.cal-day.s-H.has-remark::after,.cal-day.s-L.has-remark::after,.cal-day.s-HD.has-remark::after{background:#fff176;border-color:rgba(0,0,0,.4);}
 .cal-day.wo-day{background:var(--border);color:var(--text2);position:relative;font-size:9px;flex-direction:column;gap:0;line-height:1;}
 .cal-day.wo-day .wo-num{font-size:12px;font-weight:700;line-height:1.2;}
 .cal-day.wo-day .wo-lbl{font-size:7px;font-weight:700;letter-spacing:0.3px;opacity:.8;text-transform:uppercase;}
@@ -394,8 +396,6 @@ select:-webkit-autofill {
       <button class="icon-btn" onclick="closeSD()"><span class="material-icons-round">arrow_back</span></button>
       <div class="topbar-title" id="sdTitle">Subject</div>
       <div style="display:flex;gap:2px">
-        <button class="icon-btn" onclick="sdView('cal')" id="sdCalBtn" title="Calendar"><span class="material-icons-round">calendar_month</span></button>
-        <button class="icon-btn" onclick="sdView('list')" id="sdListBtn" title="List"><span class="material-icons-round">list</span></button>
         <button class="icon-btn" onclick="sdMenu()"><span class="material-icons-round">more_vert</span></button>
       </div>
     </div>
@@ -614,6 +614,16 @@ function init(){
   load();
   pendingWeeklyOff=S.weeklyOff||0;
   applyTheme();applyS();
+  // Always start on Home tab — ignore any cached state
+  tab='home';
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-home').classList.add('active');
+  document.getElementById('nav-home').classList.add('active');
+  document.getElementById('topbarTitle').textContent='Self Attendance';
+  document.getElementById('btnSearch').style.display='';
+  document.getElementById('btnMenu').style.display='';
+  document.getElementById('mainFab').style.display='';
   renderHome();renderByDate();renderReports();
 }
 
@@ -735,7 +745,8 @@ function renderCalView(s){
     const isT=ds===tod?'today':'';
     const dow=new Date(sdY,sdM,d).getDay();
     const isWO=(dow===weekOff)&&!r;
-    cells+=`<button class="cal-day ${sc} ${isT}${isWO?' wo-day':''}" onclick="markAtt('${curSub}','${ds}')">${isWO?`<span class='wo-num'>${d}</span><span class='wo-lbl'>WO</span>`:d}</button>`;
+    const hasRemark=r&&r.n&&r.n.trim().length>0;
+cells+=`<button class="cal-day ${sc} ${isT}${isWO?' wo-day':''}${hasRemark?' has-remark':''}" onclick="markAtt('${curSub}','${ds}')">${isWO?`<span class='wo-num'>${d}</span><span class='wo-lbl'>WO</span>`:d}</button>`;
   }
   const legends=[{k:'P',l:'Present'},{k:'A',l:'Absent'},{k:'H',l:'Holiday'},{k:'L',l:'Leave'},{k:'HD',l:'Half Day'}];
   const today=new Date(),unmarked=[];
@@ -762,8 +773,8 @@ function renderCalView(s){
   </div>
   <div class="summary-bar">
     <div class="summary-item"><div class="summary-val">${lpct}%</div><div class="summary-label">Overall</div></div>
-    <div class="summary-item"><div class="summary-val">${ls.present}</div><div class="summary-label">Total Present</div></div>
-    <div class="summary-item"><div class="summary-val">${ls.absent}</div><div class="summary-label">Total Absent</div></div>
+    <div class="summary-item"><div class="summary-val">${ls.present}</div><div class="summary-label">Total P</div></div>
+    <div class="summary-item"><div class="summary-val">${ls.absent}</div><div class="summary-label">Total A</div></div>
     <div class="summary-item"><div class="summary-val">${ls.total}</div><div class="summary-label">Working</div></div>
   </div>
   <div class="cal-grid">
@@ -930,7 +941,7 @@ function applyMonth(){
 function exportCSV(id){
   const s=D.subjects.find(x=>x.id===id);
   const att=(D.attendance[id]||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
-  let csv=`Self Attendance - ${s.name}\nDate,Day,Status,Note\n`;
+  let csv=`Self Attendance - ${s.name}\nDate,Day,Status,Remarks\n`;
   att.forEach(a=>{const d=new Date(a.date);csv+=`${a.date},${DAYS[d.getDay()]},${a.s},"${(a.n||'').replace(/"/g,'""')}"\n`;});
   const st=stats(id);
   csv+=`\nSummary,,\nPresent,${st.present},\nAbsent,${st.absent},\nHoliday,${st.holiday},\nLeave,${st.leave},\nHalf Day,${st.halfday},\nTotal Working,${st.total},\nPercentage,${st.total>0?Math.round(st.present/st.total*100):0}%,\n`;
@@ -943,7 +954,7 @@ function exportAllCSV(){
   D.subjects.forEach(s=>{
     const att=(D.attendance[s.id]||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
     const st=stats(s.id);
-    csv+=`Subject: ${s.name}\nDate,Day,Status,Note\n`;
+    csv+=`Subject: ${s.name}\nDate,Day,Status,Remarks\n`;
     att.forEach(a=>{const d=new Date(a.date);csv+=`${a.date},${DAYS[d.getDay()]},${a.s},"${(a.n||'').replace(/"/g,'""')}"\n`;});
     csv+=`Summary: P=${st.present} A=${st.absent} H=${st.holiday} L=${st.leave} HD=${st.halfday} | ${st.total>0?Math.round(st.present/st.total*100):0}%\n\n`;
   });
@@ -955,6 +966,8 @@ function shareRpt(id){
   const s=D.subjects.find(x=>x.id===id);
   const st=stats(id);
   const pct=st.total>0?Math.round(st.present/st.total*100):0;
+  const att=D.attendance[id]||[];
+  const withRemarks=att.filter(a=>a.n&&a.n.trim()).length;
   const txt=` Attendance - ${s.name}\n Present: ${st.present}\n Absent: ${st.absent}\n Holiday: ${st.holiday}\n Leave: ${st.leave}\n Percentage: ${pct}%`;
   if(navigator.share)navigator.share({title:s.name+' Attendance',text:txt}).catch(()=>clip(txt));
   else{clip(txt);toast('Copied to clipboard!');}
@@ -1648,7 +1661,7 @@ function generateManifest(){
     id: location.pathname,
     display: 'standalone',
     orientation: 'portrait-primary',
-    background_color: '#f5faf8',
+    background_color: '#1a6b5a',
     theme_color: '#1a6b5a',
     categories: ['education','productivity'],
     icons: [
